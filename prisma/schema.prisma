@@ -1,0 +1,377 @@
+// EuroLeague Lobby — Prisma schema
+// -------------------------------------------------------------
+// Provider is SQLite for zero-config local dev. The schema is written
+// to be PostgreSQL-compatible: to migrate, switch `provider` to
+// "postgresql", set DATABASE_URL, optionally promote the documented
+// String "enum" fields (status/role/recommendation/...) to native enums,
+// and run `prisma migrate`. No model relations need to change.
+// -------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  // role: "user" | "admin"
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+
+  watchlist    WatchlistItem[]
+  participants DraftParticipant[]
+  draftRooms   DraftRoom[]        @relation("DraftRoomOwner")
+}
+
+// ---------------------------------------------------------------------------
+// Teams
+// ---------------------------------------------------------------------------
+
+model Team {
+  id         String  @id @default(cuid())
+  name       String
+  shortName  String
+  city       String
+  country    String
+  colorPrimary   String @default("#ff5a1f")
+  colorSecondary String @default("#0b0f1c")
+  coach      String
+
+  // Identity / scheme
+  playstyle  String  // e.g. "Pick-and-roll heavy, drive-and-kick"
+  pace       Float   // possessions / 40 min
+  offRating  Float   // points per 100 possessions
+  defRating  Float   // points allowed per 100 possessions
+
+  // What the team ALLOWS to opponents (fantasy matchup engine inputs)
+  reboundsAllowed Float
+  assistsAllowed  Float
+  turnoversForced Float
+  pointsAllowed   Float
+  threePtAllowed  Float
+
+  // Fantasy matchup friendliness, 0-100 (higher = more fantasy-friendly to face)
+  fantasyFriendliness Float @default(50)
+
+  players      Player[]
+  rosterMovesIn  RosterMove[] @relation("MoveToTeam")
+  rosterMovesOut RosterMove[] @relation("MoveFromTeam")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Players
+// ---------------------------------------------------------------------------
+
+model Player {
+  id        String  @id @default(cuid())
+  firstName String
+  lastName  String
+  // position: "PG" | "SG" | "SF" | "PF" | "C"
+  position  String
+  nationality String
+  age       Int
+  heightCm  Int?
+
+  // Current team (nullable -> free agent / "χωρίς ομάδα")
+  teamId    String?
+  team      Team?   @relation(fields: [teamId], references: [id])
+
+  // status: "signed" | "rumored" | "free_agent" | "injured" | "departing"
+  status    String  @default("signed")
+
+  // Depth-chart role on current team:
+  // "starter" | "rotation" | "bench" | "deep_bench" | "unknown"
+  depthRole String  @default("unknown")
+
+  // Fantasy economy
+  fantasyPrice Float @default(5.0) // credits
+
+  // Risk / archetype tags (comma-separated; parsed in app layer)
+  tags      String  @default("")
+
+  seasonStats PlayerSeasonStat[]
+  projection  Projection?
+  boxScores   BoxScore[]
+  injuries    InjuryEvent[]
+  alerts      FantasyAlert[]
+  watchedBy   WatchlistItem[]
+  rosterMoves RosterMove[]
+  draftPicks  DraftPick[]
+  queueItems  DraftQueueItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+  @@index([position])
+  @@index([status])
+}
+
+// Historical per-season aggregate stats (e.g. season "2024-25")
+model PlayerSeasonStat {
+  id       String @id @default(cuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season   String
+
+  // The team the player was on that season (string snapshot, survives transfers)
+  teamSnapshot String?
+
+  games    Int
+  minutes  Float
+  points   Float
+  rebounds Float
+  assists  Float
+  steals   Float
+  blocks   Float
+  turnovers Float
+  usage    Float  // usage rate %
+  pir      Float  // EuroLeague Performance Index Rating
+  fantasyPoints Float
+  // Consistency: stdev of fantasy points per game (lower = more consistent)
+  fpStdev  Float @default(0)
+
+  @@unique([playerId, season])
+  @@index([season])
+}
+
+// Forward-looking projection for the upcoming/current season
+model Projection {
+  id       String @id @default(cuid())
+  playerId String @unique
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season   String
+
+  projMinutes  Float
+  projUsage    Float
+  projPoints   Float
+  projRebounds Float
+  projAssists  Float
+  projSteals   Float
+  projBlocks   Float
+  projTurnovers Float
+  projPir      Float
+  projFantasyPoints Float
+
+  // Fantasy Value Engine outputs
+  valueScore        Float // projFP per credit, normalised 0-100
+  pointsPerCredit   Float
+  riskAdjustedValue Float
+  upsideScore       Float // 0-100
+  consistencyScore  Float // 0-100
+  injuryRisk        Float // 0-100 (higher = riskier)
+  ownershipPrediction Float // 0-100 (predicted % rostered)
+
+  // recommendation: "avoid" | "watchlist" | "value_pick" | "premium_pick"
+  recommendation String
+  // signal: "buy" | "sell" | "hold"
+  signal         String @default("hold")
+
+  // Human-readable rationale generated by the engine
+  rationale String @default("")
+
+  // Free-text role projection on the (possibly new) team
+  projectedRole String @default("")
+
+  computedAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Roster moves / transfers (the app must support continuous June->season churn)
+// ---------------------------------------------------------------------------
+
+model RosterMove {
+  id        String @id @default(cuid())
+  playerId  String
+  player    Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  // type: "signing" | "transfer" | "release" | "rumor" | "extension"
+  type      String
+
+  fromTeamId String?
+  fromTeam   Team?  @relation("MoveFromTeam", fields: [fromTeamId], references: [id])
+  toTeamId   String?
+  toTeam     Team?  @relation("MoveToTeam", fields: [toTeamId], references: [id])
+
+  note      String @default("")
+  // reliability: "confirmed" | "reliable" | "rumor"
+  reliability String @default("confirmed")
+  occurredAt DateTime @default(now())
+
+  @@index([playerId])
+  @@index([occurredAt])
+}
+
+// ---------------------------------------------------------------------------
+// Injuries
+// ---------------------------------------------------------------------------
+
+model InjuryEvent {
+  id        String @id @default(cuid())
+  playerId  String
+  player    Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  // severity: "minor" | "moderate" | "major"
+  severity  String
+  description String
+  // status: "out" | "doubtful" | "questionable" | "probable" | "recovered"
+  status    String
+  expectedReturn DateTime?
+  occurredAt DateTime @default(now())
+
+  @@index([playerId])
+}
+
+// ---------------------------------------------------------------------------
+// Fantasy alerts (price changes, breakouts, role shifts, injuries)
+// ---------------------------------------------------------------------------
+
+model FantasyAlert {
+  id        String @id @default(cuid())
+  playerId  String?
+  player    Player? @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  // kind: "price_change" | "role_change" | "injury" | "breakout" | "transfer" | "buy_low" | "sell_high"
+  kind      String
+  // severity: "info" | "warning" | "critical"
+  severity  String @default("info")
+  title     String
+  body      String @default("")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Watchlist (per user)
+// ---------------------------------------------------------------------------
+
+model WatchlistItem {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  note     String @default("")
+  createdAt DateTime @default(now())
+
+  @@unique([userId, playerId])
+}
+
+// ---------------------------------------------------------------------------
+// Box scores — continuous learning ingest target (per game, per player)
+// ---------------------------------------------------------------------------
+
+model BoxScore {
+  id        String @id @default(cuid())
+  playerId  String
+  player    Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season    String
+  round     Int
+  opponent  String
+  minutes   Float
+  points    Float
+  rebounds  Float
+  assists   Float
+  steals    Float
+  blocks    Float
+  turnovers Float
+  pir       Float
+  fantasyPoints Float
+  playedAt  DateTime @default(now())
+
+  @@index([playerId, season])
+  @@index([season, round])
+}
+
+// ---------------------------------------------------------------------------
+// Draft Mode 2026
+// ---------------------------------------------------------------------------
+
+model DraftRoom {
+  id        String @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User   @relation("DraftRoomOwner", fields: [ownerId], references: [id])
+
+  // status: "lobby" | "drafting" | "paused" | "complete"
+  status    String @default("lobby")
+  // type: "snake"
+  draftType String @default("snake")
+
+  rounds       Int @default(10)
+  pickSeconds  Int @default(60)
+  rosterSlots  String @default("PG,SG,SF,PF,C,FLEX,FLEX,BENCH,BENCH,BENCH")
+
+  currentPickIndex Int @default(0) // 0-based overall pick number
+  season    String @default("2025-26")
+
+  participants DraftParticipant[]
+  picks        DraftPick[]
+  queueItems   DraftQueueItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DraftParticipant {
+  id        String @id @default(cuid())
+  roomId    String
+  room      DraftRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?  @relation(fields: [userId], references: [id])
+  teamName  String
+  // draftOrder: seed position after the lottery (0-based)
+  draftOrder Int
+  isAutopick Boolean @default(false)
+
+  picks      DraftPick[]
+  queueItems DraftQueueItem[]
+
+  @@index([roomId])
+}
+
+model DraftPick {
+  id            String @id @default(cuid())
+  roomId        String
+  room          DraftRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participantId String
+  participant   DraftParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  playerId      String
+  player        Player @relation(fields: [playerId], references: [id])
+
+  overall   Int // 0-based overall pick number
+  round     Int
+  pickInRound Int
+  auto      Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([roomId, overall])
+  @@unique([roomId, playerId])
+  @@index([roomId])
+}
+
+model DraftQueueItem {
+  id            String @id @default(cuid())
+  roomId        String
+  room          DraftRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participantId String
+  participant   DraftParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  playerId      String
+  player        Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  rank          Int
+
+  @@unique([participantId, playerId])
+  @@index([roomId])
+}

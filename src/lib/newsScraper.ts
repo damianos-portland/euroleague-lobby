@@ -45,6 +45,7 @@ export const CLUB_ALIASES: Record<string, string[]> = {
   TEL: ["maccabi tel aviv", "maccabi"],
   HTA: ["hapoel tel aviv", "hapoel"],
   DUB: ["dubai basketball", "dubai"],
+  BES: ["besiktas", "beşiktaş"], // 2026-27 newcomer
 };
 
 function decodeEntities(s: string): string {

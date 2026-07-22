@@ -30,4 +30,5 @@ export const TEAM_BUDGETS: TeamBudget[] = [
   { code: "BAS", name: "Baskonia", budgetMEur: 20 },
   { code: "ASV", name: "LDLC ASVEL", budgetMEur: 18 },
   { code: "PRS", name: "Paris Basketball", budgetMEur: 17 },
+  { code: "BES", name: "Besiktas", budgetMEur: 15 }, // 2026-27 newcomer (present in the official feed)
 ];

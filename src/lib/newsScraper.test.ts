@@ -66,8 +66,8 @@ describe("matchEntities", () => {
     expect(m.teamCodes).toContain("OLY");
     expect(m.teamCodes).toContain("MAD");
   });
-  it("exports aliases for all 20 clubs", () => {
-    expect(Object.keys(CLUB_ALIASES)).toHaveLength(20);
+  it("exports aliases for all 21 clubs (20 + 2026-27 newcomer Besiktas)", () => {
+    expect(Object.keys(CLUB_ALIASES)).toHaveLength(21);
   });
   it("matches punctuated first names like T.J. for ambiguous last names", () => {
     const roster = [

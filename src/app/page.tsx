@@ -2,36 +2,66 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import {
   getTopByValue,
-  getRecentMoves,
   getAlerts,
-  getFreeAgents,
   getDemoUser,
   getWatchlist,
+  getNewsItems,
+  getRosterRace,
+  getValueDeltas,
 } from "@/lib/queries";
 import { PageHeader } from "@/components/PageHeader";
-import { RecBadge, SignalBadge, PosBadge, StatusBadge, Stat, Meter, valueTone } from "@/components/ui";
-import { ArrowRightLeft, Bell, Star, TrendingUp, UserMinus, Trophy } from "lucide-react";
+import { RecBadge, SignalBadge, PosBadge, Meter, valueTone } from "@/components/ui";
+import { Ticker, BoardCard, DeltaTag, TickerItem } from "@/components/desk";
+import { Bell, Star, TrendingUp, Trophy, Newspaper, HardHat, Wallet } from "lucide-react";
+import { TEAM_BUDGETS } from "@/data/budgets";
 
 export const dynamic = "force-dynamic";
 
+const ROSTER_REF = 16;
+
 export default async function LobbyPage() {
-  const [top, moves, alerts, freeAgents, demo, counts] = await Promise.all([
-    getTopByValue(12),
-    getRecentMoves(8),
-    getAlerts(8),
-    getFreeAgents(),
+  const [market, news, rosterRace, deltas, alerts, demo] = await Promise.all([
+    getTopByValue(15),
+    getNewsItems(12),
+    getRosterRace(),
+    getValueDeltas(),
+    getAlerts(6),
     getDemoUser(),
-    Promise.all([prisma.player.count(), prisma.team.count(), prisma.rosterMove.count()]),
   ]);
   const watchlist = demo ? await getWatchlist(demo.id) : [];
-  const [playerCount, teamCount, moveCount] = counts;
-  const changedTeam = moves.filter((m) => m.type === "transfer");
+
+  // Ticker: news + roster meta item.
+  const signedTotal = rosterRace.reduce((s, t) => s + t.entries.length, 0);
+  const tickerItems: TickerItem[] = [
+    ...news.map((n) => ({
+      id: n.id,
+      kind: (n.kind === "official" || n.kind === "rumor" ? n.kind : "news") as TickerItem["kind"],
+      text:
+        n.kind === "rumor"
+          ? `${n.title.toUpperCase().slice(0, 70)} [${n.confidence}%]`
+          : n.title.toUpperCase().slice(0, 70),
+      href: n.url,
+    })),
+    { id: "meta-rosters", kind: "meta" as const, text: `ROSTERS 2026-27: ${signedTotal}/${20 * ROSTER_REF} SIGNED` },
+  ];
+
+  // Board stats.
+  const rumors = news.filter((n) => n.kind === "rumor");
+  const activeRumors = await prisma.newsItem.count({ where: { kind: "rumor" } });
+  const leader = rosterRace[0];
+  const laggard = rosterRace[rosterRace.length - 1];
+  const topBudget = TEAM_BUDGETS[0];
+  const avgBudget = Math.round(TEAM_BUDGETS.reduce((s, b) => s + b.budgetMEur, 0) / TEAM_BUDGETS.length);
+  const moverEntries = [...deltas.entries()].filter(([, d]) => Math.abs(d) >= 2);
+  const topRiser = moverEntries.sort((a, b) => b[1] - a[1])[0];
+  const topRiserPlayer = topRiser ? market.find((p) => p.id === topRiser[0]) : undefined;
 
   return (
     <>
       <PageHeader
-        title="EuroLeague Lobby"
-        subtitle="Το κέντρο ελέγχου του fantasy manager για τη σεζόν 2025-26 — rosters, μεταγραφές, projections, value & draft prep."
+        title="Lobby"
+        status="● LIVE · OFFSEASON 2026-27"
+        subtitle="Το trading desk του fantasy manager — αγορά, φήμες, ρόστερ και budgets σε μία οθόνη."
         action={
           <Link href="/draft" className="btn-primary">
             <Trophy size={16} /> Draft Mode 2026
@@ -39,161 +69,145 @@ export default async function LobbyPage() {
         }
       />
 
-      {/* KPI row */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Players tracked" value={playerCount} />
-        <Stat label="Teams" value={teamCount} />
-        <Stat label="Roster moves" value={moveCount} />
-        <Stat label="Free agents" value={freeAgents.length} sub="χωρίς ομάδα" />
+      <Ticker items={tickerItems} />
+
+      {/* Boards */}
+      <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <BoardCard
+          href="/rumors"
+          tint="amber"
+          icon={<Newspaper size={13} />}
+          title="RUMOR MILL"
+          stat={activeRumors}
+          sub={rumors[0] ? `top: ${rumors[0].title.slice(0, 40)}…` : "καμία ενεργή φήμη"}
+        />
+        <BoardCard
+          href="/roster-race"
+          tint="sky"
+          icon={<HardHat size={13} />}
+          title="ROSTER RACE"
+          stat={
+            <>
+              {signedTotal}
+              <span className="text-sm text-slate-500">/{20 * ROSTER_REF}</span>
+            </>
+          }
+          sub={leader ? `leader: ${leader.teamCode} ${leader.entries.length} · τελευταία: ${laggard.teamCode} ${laggard.entries.length}` : "—"}
+        />
+        <BoardCard
+          href="/budgets"
+          tint="violet"
+          icon={<Wallet size={13} />}
+          title="BUDGET LEAGUE"
+          stat={`€${topBudget.budgetMEur}M`}
+          sub={`top: ${topBudget.code} · μ.ο. €${avgBudget}M`}
+        />
+        <BoardCard
+          href="/projections"
+          tint="green"
+          icon={<TrendingUp size={13} />}
+          title="MOVERS"
+          stat={`▲ ${moverEntries.length}`}
+          sub={topRiserPlayer ? `riser: ${topRiserPlayer.name}` : "value shifts vs χθες"}
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        {/* Left: ranking */}
-        <div className="lg:col-span-2 space-y-5">
-          <section className="card card-pad">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-sm font-bold text-white">
-                <TrendingUp size={16} className="text-brand-400" /> Top Projected Value — 2025-26
-              </h2>
-              <Link href="/projections" className="text-xs font-semibold text-brand-400 hover:underline">
-                Όλα τα projections →
-              </Link>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px]">
-                <thead>
-                  <tr className="border-b border-white/5">
-                    <th className="th">#</th>
-                    <th className="th">Player</th>
-                    <th className="th">Pos</th>
-                    <th className="th">Team</th>
-                    <th className="th text-right">Price</th>
-                    <th className="th text-right">Proj FP</th>
-                    <th className="th text-right">FP/cr</th>
-                    <th className="th w-32">Value</th>
-                    <th className="th">Rec</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {top.map((p, i) => (
-                    <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="td text-slate-500">{i + 1}</td>
-                      <td className="td">
-                        <Link href={`/players/${p.id}`} className="font-semibold text-white hover:text-brand-400">
-                          {p.name}
-                        </Link>
-                      </td>
-                      <td className="td"><PosBadge pos={p.position} /></td>
-                      <td className="td text-slate-400">{p.teamShort ?? "—"}</td>
-                      <td className="td text-right stat">{p.fantasyPrice.toFixed(1)}</td>
-                      <td className="td text-right stat font-bold text-white">{p.proj?.projFantasyPoints.toFixed(1)}</td>
-                      <td className="td text-right stat">{p.proj?.pointsPerCredit.toFixed(1)}</td>
-                      <td className="td"><Meter value={p.proj?.valueScore ?? 0} tone={valueTone(p.proj?.valueScore ?? 0)} /></td>
-                      <td className="td"><RecBadge rec={p.proj?.recommendation} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* Transfers + changed team */}
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <section className="card card-pad">
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
-                <ArrowRightLeft size={16} className="text-sky-400" /> Πρόσφατες μεταγραφές
-              </h2>
-              <ul className="space-y-2.5">
-                {changedTeam.length === 0 && <li className="text-sm text-slate-500">—</li>}
-                {changedTeam.map((m) => (
-                  <li key={m.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/[0.02] px-3 py-2">
-                    <Link href={`/players/${m.playerId}`} className="text-sm font-semibold text-white hover:text-brand-400">
-                      {m.player.firstName} {m.player.lastName}
-                    </Link>
-                    <span className="text-xs text-slate-400">
-                      {m.fromTeam?.shortName ?? "FA"} <span className="text-brand-400">→</span> {m.toTeam?.shortName ?? "?"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section className="card card-pad">
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
-                <UserMinus size={16} className="text-rose-400" /> Παίκτες χωρίς ομάδα
-              </h2>
-              <ul className="space-y-2.5">
-                {freeAgents.slice(0, 6).map((p) => (
-                  <li key={p.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/[0.02] px-3 py-2">
-                    <Link href={`/players/${p.id}`} className="text-sm font-semibold text-white hover:text-brand-400">
-                      {p.name}
-                    </Link>
-                    <div className="flex items-center gap-2">
-                      <PosBadge pos={p.position} />
-                      <StatusBadge status={p.status} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </div>
+      {/* The Market */}
+      <section className="card card-pad mb-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-white">
+            <TrendingUp size={16} className="text-brand-400" /> The Market — Top Value
+          </h2>
+          <Link href="/projections" className="font-mono text-xs font-semibold text-brand-400 hover:underline">
+            FULL BOARD →
+          </Link>
         </div>
-
-        {/* Right: alerts + watchlist */}
-        <div className="space-y-5">
-          <section className="card card-pad">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
-              <Bell size={16} className="text-amber-400" /> Fantasy Alerts
-            </h2>
-            <ul className="space-y-3">
-              {alerts.map((a) => (
-                <li key={a.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-white">{a.title}</span>
-                    <SeverityDot severity={a.severity} />
-                  </div>
-                  {a.body && <p className="mt-1 text-xs leading-relaxed text-slate-400">{a.body}</p>}
-                  {a.player && (
-                    <Link href={`/players/${a.playerId}`} className="mt-1 inline-block text-[11px] font-semibold text-brand-400 hover:underline">
-                      {a.player.firstName} {a.player.lastName} →
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px]">
+            <thead>
+              <tr className="border-b border-white/5">
+                <th className="th">#</th>
+                <th className="th">Asset</th>
+                <th className="th">Pos</th>
+                <th className="th text-right">Price</th>
+                <th className="th text-right">Proj FP</th>
+                <th className="th text-right">FP/cr</th>
+                <th className="th w-28">Value</th>
+                <th className="th text-right">Δ</th>
+                <th className="th">Signal</th>
+                <th className="th">Rec</th>
+              </tr>
+            </thead>
+            <tbody>
+              {market.map((p, i) => (
+                <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                  <td className="td stat text-slate-500">{i + 1}</td>
+                  <td className="td">
+                    <Link href={`/players/${p.id}`} className="stat font-bold text-white hover:text-brand-400">
+                      {p.lastName.toUpperCase()}
+                      <span className="text-slate-500">.{p.teamShort ?? "FA"}</span>
                     </Link>
-                  )}
-                </li>
+                  </td>
+                  <td className="td"><PosBadge pos={p.position} /></td>
+                  <td className="td stat text-right">{p.fantasyPrice.toFixed(1)}</td>
+                  <td className="td stat text-right font-bold text-white">{p.proj?.projFantasyPoints.toFixed(1)}</td>
+                  <td className="td stat text-right">{p.proj?.pointsPerCredit.toFixed(1)}</td>
+                  <td className="td"><Meter value={p.proj?.valueScore ?? 0} tone={valueTone(p.proj?.valueScore ?? 0)} /></td>
+                  <td className="td text-right"><DeltaTag delta={deltas.get(p.id)} /></td>
+                  <td className="td"><SignalBadge signal={p.proj?.signal} /></td>
+                  <td className="td"><RecBadge rec={p.proj?.recommendation} /></td>
+                </tr>
               ))}
-            </ul>
-          </section>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-          <section className="card card-pad">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
-              <Star size={16} className="text-amber-400" /> Watchlist
-              <span className="text-xs font-normal text-slate-500">({demo?.name})</span>
-            </h2>
-            <ul className="space-y-2">
-              {watchlist.length === 0 && <li className="text-sm text-slate-500">Άδειο watchlist.</li>}
-              {watchlist.map(({ player }) => (
-                <li key={player.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/[0.02] px-3 py-2">
-                  <Link href={`/players/${player.id}`} className="text-sm font-semibold text-white hover:text-brand-400">
-                    {player.name}
+      {/* Alerts + Watchlist */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <section className="card card-pad">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
+            <Bell size={16} className="text-amber-400" /> Fantasy Alerts
+          </h2>
+          <ul className="space-y-3">
+            {alerts.length === 0 && <li className="text-sm text-slate-500">Κανένα alert.</li>}
+            {alerts.map((a) => (
+              <li key={a.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-white">{a.title}</span>
+                </div>
+                {a.body && <p className="mt-1 text-xs leading-relaxed text-slate-400">{a.body}</p>}
+                {a.player && (
+                  <Link href={`/players/${a.playerId}`} className="mt-1 inline-block font-mono text-[11px] font-semibold text-brand-400 hover:underline">
+                    {a.player.firstName} {a.player.lastName} →
                   </Link>
-                  <div className="flex items-center gap-2">
-                    <span className="stat text-xs text-slate-400">{player.proj?.projFantasyPoints.toFixed(1)} FP</span>
-                    <SignalBadge signal={player.proj?.signal} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="card card-pad">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
+            <Star size={16} className="text-amber-400" /> Watchlist
+            {demo && <span className="text-xs font-normal text-slate-500">({demo.name})</span>}
+          </h2>
+          <ul className="space-y-2">
+            {watchlist.length === 0 && <li className="text-sm text-slate-500">Άδειο watchlist.</li>}
+            {watchlist.map(({ player }) => (
+              <li key={player.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/[0.02] px-3 py-2">
+                <Link href={`/players/${player.id}`} className="text-sm font-semibold text-white hover:text-brand-400">
+                  {player.name}
+                </Link>
+                <div className="flex items-center gap-2">
+                  <span className="stat text-xs text-slate-400">{player.proj?.projFantasyPoints.toFixed(1)} FP</span>
+                  <SignalBadge signal={player.proj?.signal} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </>
   );
-}
-
-function SeverityDot({ severity }: { severity: string }) {
-  const map: Record<string, string> = {
-    info: "bg-sky-400",
-    warning: "bg-amber-400",
-    critical: "bg-rose-400",
-  };
-  return <span className={`h-2 w-2 shrink-0 rounded-full ${map[severity] ?? "bg-slate-400"}`} />;
 }

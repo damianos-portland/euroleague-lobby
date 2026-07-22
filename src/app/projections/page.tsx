@@ -9,7 +9,7 @@ export default async function ProjectionsPage() {
   return (
     <>
       <PageHeader
-        title="Player Projections — 2025-26"
+        title="Player Projections — 2026-27"
         subtitle="Προβλεπόμενη απόδοση με βάση νέα ομάδα, playstyle, pace, διαθέσιμο usage, βάθος roster, ρόλο & περσινά στατιστικά. Ο μηχανισμός ξανατρέχει κάθε εβδομάδα με πραγματικά box scores."
       />
       <PlayerExplorer players={players} teams={teams} mode="projection" />

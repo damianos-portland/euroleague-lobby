@@ -8,14 +8,14 @@
 
 html,
 body {
-  background: radial-gradient(1200px 600px at 80% -10%, rgba(255, 90, 31, 0.08), transparent 60%),
-    radial-gradient(900px 500px at -10% 10%, rgba(59, 130, 246, 0.08), transparent 55%), #070912;
+  background: radial-gradient(1000px 500px at 85% -10%, rgba(227, 82, 5, 0.07), transparent 60%),
+    #080b12;
   color: #e7ecf5;
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-white/5 bg-ink-850/70 shadow-card backdrop-blur-sm;
+    @apply rounded-2xl border border-white/[0.07] bg-white/[0.025] shadow-card backdrop-blur-sm;
   }
   .card-pad {
     @apply p-4 sm:p-5;
@@ -24,7 +24,7 @@ body {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
   .stat {
-    @apply tabular-nums;
+    @apply font-mono tabular-nums;
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed;
@@ -47,6 +47,18 @@ body {
   .section-title {
     @apply text-xs font-bold uppercase tracking-widest text-slate-400;
   }
+  .tint-amber {
+    @apply border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-white/[0.02];
+  }
+  .tint-sky {
+    @apply border-sky-400/20 bg-gradient-to-br from-sky-400/10 to-white/[0.02];
+  }
+  .tint-violet {
+    @apply border-violet-400/20 bg-gradient-to-br from-violet-400/10 to-white/[0.02];
+  }
+  .tint-green {
+    @apply border-emerald-400/20 bg-gradient-to-br from-emerald-400/10 to-white/[0.02];
+  }
 }
 
 /* thin scrollbars */
@@ -60,4 +72,10 @@ body {
 }
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
 }

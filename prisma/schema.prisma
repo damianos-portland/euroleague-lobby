@@ -111,6 +111,9 @@ model Player {
   rosterMoves RosterMove[]
   draftPicks  DraftPick[]
   queueItems  DraftQueueItem[]
+  newsItems     NewsItem[]
+  rosterEntries RosterEntry[]
+  snapshots     ProjectionSnapshot[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -374,4 +377,59 @@ model DraftQueueItem {
 
   @@unique([participantId, playerId])
   @@index([roomId])
+}
+
+// ---------------------------------------------------------------------------
+// Offseason data: scraped news/rumors, next-season rosters, value snapshots
+// ---------------------------------------------------------------------------
+
+model NewsItem {
+  id          String   @id @default(cuid())
+  url         String   @unique // dedupe key
+  source      String // "eurohoops" | "sportando"
+  title       String
+  summary     String   @default("")
+  publishedAt DateTime
+  // kind: "official" | "rumor" | "news"
+  kind        String
+  confidence  Int      @default(0) // 0-100, rumors only
+  playerId    String?
+  player      Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  teamCodes   String   @default("") // comma-separated matched club codes
+  createdAt   DateTime @default(now())
+
+  @@index([publishedAt])
+  @@index([kind, publishedAt])
+  @@index([playerId])
+}
+
+model RosterEntry {
+  id         String   @id @default(cuid())
+  season     String // "2026-27"
+  teamCode   String
+  teamName   String
+  personCode String
+  name       String // "Firstname Lastname" cleaned
+  position   String   @default("")
+  dorsal     String   @default("")
+  // status: "returning" | "transfer" | "new"
+  status     String   @default("new")
+  playerId   String?
+  player     Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([season, teamCode, personCode])
+  @@index([playerId])
+}
+
+model ProjectionSnapshot {
+  id                String @id @default(cuid())
+  playerId          String
+  player            Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  date              String // "YYYY-MM-DD" UTC
+  valueScore        Float
+  projFantasyPoints Float
+
+  @@unique([playerId, date])
+  @@index([date])
 }

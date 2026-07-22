@@ -10,7 +10,8 @@
 // ---------------------------------------------------------------------------
 
 import { prisma } from "../src/lib/db";
-import { ingestLiveSeason } from "../src/lib/ingest";
+import { ingestLiveSeason, ingestRosters, snapshotProjections } from "../src/lib/ingest";
+import { scrapeNews } from "../src/lib/newsScraper";
 
 async function ensureScaffold() {
   const admin = await prisma.user.upsert({
@@ -48,9 +49,15 @@ async function ensureScaffold() {
 async function main() {
   console.log("→ Ensuring demo scaffold (users, draft room)…");
   await ensureScaffold();
-  console.log("→ Fetching live EuroLeague data + refreshing DB…");
-  const r = await ingestLiveSeason();
-  console.log("✓ Live refresh complete:", r);
+  console.log("→ Live stats refresh…");
+  console.log("  ", await ingestLiveSeason());
+  console.log("→ 2026-27 rosters…");
+  console.log("  ", await ingestRosters());
+  console.log("→ News scrape…");
+  console.log("  ", await scrapeNews());
+  console.log("→ Projection snapshot…");
+  console.log("  ", await snapshotProjections());
+  console.log("✓ Full refresh complete");
 }
 
 main()

@@ -87,7 +87,7 @@ export default async function PlayerPage({ params }: { params: { id: string } })
         <div className="space-y-5 lg:col-span-2">
           {/* Projection vs last season */}
           <section className="card card-pad">
-            <h2 className="mb-3 text-sm font-bold text-white">Projection 2025-26 vs 2024-25</h2>
+            <h2 className="mb-3 text-sm font-bold text-white">Projection 2026-27 vs 2025-26</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <ProductionRadar last={player.last ?? null} proj={proj ?? null} />
               <div className="grid grid-cols-3 gap-2">

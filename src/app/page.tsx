@@ -20,13 +20,15 @@ export const dynamic = "force-dynamic";
 const ROSTER_REF = 16;
 
 export default async function LobbyPage() {
-  const [market, news, rosterRace, deltas, alerts, demo] = await Promise.all([
+  const [market, news, rosterRace, deltas, alerts, demo, activeRumors, topRumor] = await Promise.all([
     getTopByValue(15),
     getNewsItems(12),
     getRosterRace(),
     getValueDeltas(),
     getAlerts(6),
     getDemoUser(),
+    prisma.newsItem.count({ where: { kind: "rumor" } }),
+    prisma.newsItem.findFirst({ where: { kind: "rumor" }, orderBy: { publishedAt: "desc" } }),
   ]);
   const watchlist = demo ? await getWatchlist(demo.id) : [];
 
@@ -46,15 +48,13 @@ export default async function LobbyPage() {
   ];
 
   // Board stats.
-  const rumors = news.filter((n) => n.kind === "rumor");
-  const activeRumors = await prisma.newsItem.count({ where: { kind: "rumor" } });
   const leader = rosterRace[0];
   const laggard = rosterRace[rosterRace.length - 1];
-  const topBudget = TEAM_BUDGETS[0];
+  const topBudget = TEAM_BUDGETS.reduce((m, b) => (b.budgetMEur > m.budgetMEur ? b : m), TEAM_BUDGETS[0]);
   const avgBudget = Math.round(TEAM_BUDGETS.reduce((s, b) => s + b.budgetMEur, 0) / TEAM_BUDGETS.length);
-  const moverEntries = [...deltas.entries()].filter(([, d]) => Math.abs(d) >= 2);
-  const topRiser = moverEntries.sort((a, b) => b[1] - a[1])[0];
-  const topRiserPlayer = topRiser ? market.find((p) => p.id === topRiser[0]) : undefined;
+  const risers = [...deltas.entries()].filter(([, d]) => d >= 2).sort((a, b) => b[1] - a[1]);
+  const fallers = [...deltas.entries()].filter(([, d]) => d <= -2);
+  const topRiserPlayer = risers[0] ? market.find((p) => p.id === risers[0][0]) : undefined;
 
   return (
     <>
@@ -79,7 +79,7 @@ export default async function LobbyPage() {
           icon={<Newspaper size={13} />}
           title="RUMOR MILL"
           stat={activeRumors}
-          sub={rumors[0] ? `top: ${rumors[0].title.slice(0, 40)}…` : "καμία ενεργή φήμη"}
+          sub={topRumor ? `top: ${topRumor.title.slice(0, 40)}…` : "καμία ενεργή φήμη"}
         />
         <BoardCard
           href="/roster-race"
@@ -107,7 +107,7 @@ export default async function LobbyPage() {
           tint="green"
           icon={<TrendingUp size={13} />}
           title="MOVERS"
-          stat={`▲ ${moverEntries.length}`}
+          stat={`▲ ${risers.length} · ▼ ${fallers.length}`}
           sub={topRiserPlayer ? `riser: ${topRiserPlayer.name}` : "value shifts vs χθες"}
         />
       </div>

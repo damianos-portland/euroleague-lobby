@@ -338,7 +338,7 @@ export async function ingestRosters(
   let entries = 0;
   const touchedByClub = new Map<string, string[]>();
   for (const { club: c, people } of peopleByClub) {
-    if (!people) continue; // failed fetch: skip club entirely, never sweep it
+    if (!people || people.length === 0) continue; // no evidence of a real roster this run; don't sweep
     const touched: string[] = [];
     for (const rec of people) {
       if (rec.typeName !== "Player" || !rec.person?.code) continue;

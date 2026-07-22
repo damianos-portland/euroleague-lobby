@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Users,
@@ -19,7 +20,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-const NAV: { group: string; items: { href: string; label: string; icon: any }[] }[] = [
+const NAV: { group: string; items: { href: string; label: string; icon: LucideIcon }[] }[] = [
   {
     group: "Market",
     items: [
@@ -78,7 +79,7 @@ export function Sidebar() {
         <div className="mb-6 hidden md:block">
           <Brand />
         </div>
-        <nav className="flex flex-col gap-4">
+        <nav className="flex max-h-[calc(100vh-96px)] flex-col gap-4 overflow-y-auto pb-24">
           {NAV.map(({ group, items }) => (
             <div key={group || "misc"}>
               {group && <div className="section-title mb-1.5 px-3">{group}</div>}
@@ -105,7 +106,7 @@ export function Sidebar() {
         </nav>
 
         <div className="absolute inset-x-4 bottom-4 rounded-xl border border-white/5 bg-white/[0.03] p-3 font-mono text-[10px] text-slate-400">
-          <div className="font-bold text-emerald-400">● OFFSEASON 2026-27</div>
+          <div className="font-bold text-emerald-400"><span aria-hidden="true">● </span>OFFSEASON 2026-27</div>
           Καθημερινό refresh 06:00 UTC — stats, rosters, news.
         </div>
       </aside>

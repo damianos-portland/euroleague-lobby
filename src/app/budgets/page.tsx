@@ -79,7 +79,7 @@ export default async function BudgetsPage() {
             </tbody>
           </table>
           <p className="mt-3 text-[11px] text-slate-500">
-            Projected FP από τα 2026-27 δεδομένα των παικτών κάθε ομάδας· τα budgets είναι δημοσιευμένες εκτιμήσεις.
+            Projected FP για το 2026-27 από τα περσινά (2025-26) δεδομένα των παικτών κάθε ομάδας· τα budgets είναι δημοσιευμένες εκτιμήσεις.
           </p>
         </section>
       </div>

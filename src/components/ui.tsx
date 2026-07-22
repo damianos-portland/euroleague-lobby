@@ -15,13 +15,15 @@ export function RecBadge({ rec }: { rec?: string | null }) {
 }
 
 const SIGNAL_STYLES: Record<string, string> = {
-  buy: "bg-emerald-500/15 text-emerald-300",
-  sell: "bg-rose-500/15 text-rose-300",
-  hold: "bg-slate-500/15 text-slate-300",
+  buy: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/20",
+  sell: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-400/20",
+  hold: "bg-slate-500/15 text-slate-300 ring-1 ring-slate-400/20",
 };
 export function SignalBadge({ signal }: { signal?: string | null }) {
   return (
-    <span className={clsx("chip", SIGNAL_STYLES[signal ?? "hold"])}>{(signal ?? "hold").toUpperCase()}</span>
+    <span className={clsx("chip font-mono", SIGNAL_STYLES[signal ?? "hold"])}>
+      {(signal ?? "hold").toUpperCase()}
+    </span>
   );
 }
 
@@ -85,7 +87,7 @@ export function Stat({ label, value, sub }: { label: string; value: ReactNode; s
   return (
     <div className="rounded-xl bg-white/[0.03] px-3 py-2">
       <div className="text-[10px] uppercase tracking-wider text-slate-500">{label}</div>
-      <div className="stat text-lg font-bold text-slate-100">{value}</div>
+      <div className="stat text-lg font-bold text-white">{value}</div>
       {sub && <div className="text-[11px] text-slate-500">{sub}</div>}
     </div>
   );

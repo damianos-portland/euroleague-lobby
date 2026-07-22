@@ -16,6 +16,7 @@ import { prisma } from "./db";
 import { computeFantasyPoints, Position } from "./types";
 import { fantasyFriendliness } from "./matchup";
 import { recomputeAllProjections } from "./recomputeAll";
+import { titleCase, splitStatsName } from "./names";
 
 const V3 = "https://api-live.euroleague.net/v3/competitions/E/statistics";
 
@@ -54,24 +55,6 @@ function num(v: any, d = 0): number {
   return Number.isFinite(n) ? n : d;
 }
 const round1 = (n: number) => Math.round(n * 10) / 10;
-
-function titleCase(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/(^|[\s\-'.])([a-zà-ÿ])/g, (_m, b, c) => b + c.toUpperCase())
-    // Keep Roman-numeral suffixes and "Mc"/"Mac" prefixes readable.
-    .replace(/\b(Ii|Iii|Iv|Vi|Vii|Jr|Sr)\b/g, (m) => m.toUpperCase())
-    .replace(/\bMc([a-z])/g, (_m, c) => "Mc" + c.toUpperCase());
-}
-
-// Split the stats "SURNAME, FIRSTNAME" common name into { first, last }.
-function splitStatsName(name: string): { first: string; last: string } {
-  const parts = String(name || "").split(",");
-  return {
-    last: titleCase((parts[0] || "").trim()),
-    first: titleCase((parts[1] || "").trim()),
-  };
-}
 
 // A possession estimate from a traditional box line (per game).
 function possessions(o: any): number {
@@ -302,4 +285,87 @@ export async function ingestLiveSeason(
 
   const projections = await recomputeAllProjections();
   return { season: SEASON, teams: teamTrad.length, players: players_, projections, skipped };
+}
+
+// ---------------------------------------------------------------------------
+// Next-season roster ingest ("Roster Race"): who has signed where for the
+// upcoming season. Source: feeds clubs/{code}/people for EL_NEXT_SEASON_CODE.
+// ---------------------------------------------------------------------------
+export async function ingestRosters(
+  seasonCode = process.env.EL_NEXT_SEASON_CODE || "E2026"
+): Promise<{ season: string; teams: number; entries: number }> {
+  const SEASON = seasonLabel(seasonCode);
+  const FEED =
+    "https://feeds.incrowdsports.com/provider/euroleague-feeds/v2/competitions/E/seasons/" +
+    seasonCode;
+  const { rosterStatus } = await import("./rosterStatus");
+
+  const clubsRaw = await getJson(`${FEED}/clubs`);
+  const clubs: any[] = clubsRaw.data ?? [];
+
+  // Players with their latest season snapshot, for returning/transfer matching.
+  const dbPlayers = await prisma.player.findMany({
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      seasonStats: { orderBy: { season: "desc" }, take: 1, select: { teamSnapshot: true } },
+    },
+  });
+  const byName = new Map(
+    dbPlayers.map((p) => [`${p.firstName.toLowerCase()}|${p.lastName.toLowerCase()}`, p])
+  );
+
+  let entries = 0;
+  for (const c of clubs) {
+    let people: any[] = [];
+    try {
+      people = await getJson(`${FEED}/clubs/${c.code}/people`);
+    } catch {
+      continue; // clubs without a published roster yet are fine
+    }
+    for (const rec of people) {
+      if (rec.typeName !== "Player" || !rec.person?.code) continue;
+      const { first, last } = splitStatsName(rec.person.name || "");
+      if (!last) continue;
+      const matched = byName.get(`${first.toLowerCase()}|${last.toLowerCase()}`) ?? null;
+      const status = rosterStatus(
+        matched ? { teamSnapshot: matched.seasonStats[0]?.teamSnapshot ?? null } : null,
+        c.code
+      );
+      const data = {
+        teamName: c.name ?? c.code,
+        name: `${first} ${last}`.trim(),
+        position: rec.positionName ?? "",
+        dorsal: rec.dorsal ?? "",
+        status,
+        playerId: matched?.id ?? null,
+      };
+      await prisma.rosterEntry.upsert({
+        where: { season_teamCode_personCode: { season: SEASON, teamCode: c.code, personCode: rec.person.code } },
+        update: data,
+        create: { season: SEASON, teamCode: c.code, personCode: rec.person.code, ...data },
+      });
+      entries++;
+    }
+  }
+  return { season: SEASON, teams: clubs.length, entries };
+}
+
+// ---------------------------------------------------------------------------
+// Daily projection snapshot (feeds the "Movers" board: Δ value vs yesterday).
+// ---------------------------------------------------------------------------
+export async function snapshotProjections(): Promise<{ date: string; count: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const projections = await prisma.projection.findMany({
+    select: { playerId: true, valueScore: true, projFantasyPoints: true },
+  });
+  for (const p of projections) {
+    await prisma.projectionSnapshot.upsert({
+      where: { playerId_date: { playerId: p.playerId, date } },
+      update: { valueScore: p.valueScore, projFantasyPoints: p.projFantasyPoints },
+      create: { playerId: p.playerId, date, valueScore: p.valueScore, projFantasyPoints: p.projFantasyPoints },
+    });
+  }
+  return { date, count: projections.length };
 }

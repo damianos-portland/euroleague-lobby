@@ -7,7 +7,7 @@ const config: Config = {
       colors: {
         // EuroLeague-inspired dark palette
         ink: {
-          950: "#070912",
+          950: "#080b12",
           900: "#0b0f1c",
           850: "#0f1424",
           800: "#141a2e",
@@ -33,6 +33,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       boxShadow: {
         card: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 24px -12px rgba(0,0,0,0.7)",
@@ -43,9 +44,14 @@ const config: Config = {
           "0%,100%": { boxShadow: "0 0 0 0 rgba(255,90,31,0.5)" },
           "50%": { boxShadow: "0 0 0 8px rgba(255,90,31,0)" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         pulseRing: "pulseRing 1.6s ease-out infinite",
+        marquee: "marquee 45s linear infinite",
       },
     },
   },

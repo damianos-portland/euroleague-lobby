@@ -13,17 +13,43 @@ import {
   Gauge,
   Menu,
   X,
+  Newspaper,
+  HardHat,
+  Wallet,
 } from "lucide-react";
 import { useState } from "react";
 
-const NAV = [
-  { href: "/", label: "Lobby", icon: LayoutDashboard },
-  { href: "/teams", label: "Teams", icon: Shield },
-  { href: "/players", label: "Players", icon: Users },
-  { href: "/projections", label: "Projections", icon: LineChart },
-  { href: "/value", label: "Value Engine", icon: Gauge },
-  { href: "/draft", label: "Draft Mode 2026", icon: Trophy },
-  { href: "/admin", label: "Admin", icon: BarChart3 },
+const NAV: { group: string; items: { href: string; label: string; icon: any }[] }[] = [
+  {
+    group: "Market",
+    items: [
+      { href: "/", label: "Lobby", icon: LayoutDashboard },
+      { href: "/projections", label: "Projections", icon: LineChart },
+      { href: "/value", label: "Value Engine", icon: Gauge },
+    ],
+  },
+  {
+    group: "Offseason",
+    items: [
+      { href: "/rumors", label: "Rumor Mill", icon: Newspaper },
+      { href: "/roster-race", label: "Roster Race", icon: HardHat },
+      { href: "/budgets", label: "Budgets", icon: Wallet },
+    ],
+  },
+  {
+    group: "League",
+    items: [
+      { href: "/teams", label: "Teams", icon: Shield },
+      { href: "/players", label: "Players", icon: Users },
+    ],
+  },
+  {
+    group: "",
+    items: [
+      { href: "/draft", label: "Draft Mode 2026", icon: Trophy },
+      { href: "/admin", label: "Admin", icon: BarChart3 },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -52,28 +78,35 @@ export function Sidebar() {
         <div className="mb-6 hidden md:block">
           <Brand />
         </div>
-        <nav className="flex flex-col gap-1">
-          {NAV.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              className={clsx(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-                isActive(href)
-                  ? "bg-brand-500/15 text-white ring-1 ring-brand-500/30"
-                  : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
-              )}
-            >
-              <Icon size={18} className={isActive(href) ? "text-brand-400" : ""} />
-              {label}
-            </Link>
+        <nav className="flex flex-col gap-4">
+          {NAV.map(({ group, items }) => (
+            <div key={group || "misc"}>
+              {group && <div className="section-title mb-1.5 px-3">{group}</div>}
+              <div className="flex flex-col gap-1">
+                {items.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    className={clsx(
+                      "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+                      isActive(href)
+                        ? "bg-brand-500/15 text-white ring-1 ring-brand-500/30"
+                        : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                    )}
+                  >
+                    <Icon size={17} className={isActive(href) ? "text-brand-400" : ""} />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
-        <div className="absolute inset-x-4 bottom-4 rounded-xl border border-white/5 bg-white/[0.03] p-3 text-xs text-slate-400">
-          <div className="font-semibold text-slate-200">Season 2025-26</div>
-          Preseason · rosters in flux. Data refreshes continuously.
+        <div className="absolute inset-x-4 bottom-4 rounded-xl border border-white/5 bg-white/[0.03] p-3 font-mono text-[10px] text-slate-400">
+          <div className="font-bold text-emerald-400">● OFFSEASON 2026-27</div>
+          Καθημερινό refresh 06:00 UTC — stats, rosters, news.
         </div>
       </aside>
 

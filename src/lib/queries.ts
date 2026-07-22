@@ -191,3 +191,70 @@ export async function getFreeAgents(): Promise<PlayerDTO[]> {
   });
   return rows.map(toPlayerDTO);
 }
+
+// --- Offseason additions (news, rosters, movers) ---------------------------
+
+export async function getNewsItems(limit = 60) {
+  return prisma.newsItem.findMany({
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+    include: { player: true },
+  });
+}
+
+export interface RosterRaceTeam {
+  teamCode: string;
+  teamName: string;
+  entries: {
+    id: string;
+    name: string;
+    position: string;
+    status: string;
+    playerId: string | null;
+    lastFp: number | null;
+  }[];
+}
+
+export async function getRosterRace(season = "2026-27"): Promise<RosterRaceTeam[]> {
+  const rows = await prisma.rosterEntry.findMany({
+    where: { season },
+    orderBy: [{ teamCode: "asc" }, { name: "asc" }],
+    include: { player: { include: { seasonStats: { orderBy: { season: "desc" }, take: 1 } } } },
+  });
+  const byTeam = new Map<string, RosterRaceTeam>();
+  for (const r of rows) {
+    if (!byTeam.has(r.teamCode)) byTeam.set(r.teamCode, { teamCode: r.teamCode, teamName: r.teamName, entries: [] });
+    byTeam.get(r.teamCode)!.entries.push({
+      id: r.id,
+      name: r.name,
+      position: r.position,
+      status: r.status,
+      playerId: r.playerId,
+      lastFp: r.player?.seasonStats[0]?.fantasyPoints ?? null,
+    });
+  }
+  return [...byTeam.values()].sort((a, b) => b.entries.length - a.entries.length);
+}
+
+// Map playerId -> Δ valueScore between the two most recent snapshot dates.
+export async function getValueDeltas(): Promise<Map<string, number>> {
+  const dates = await prisma.projectionSnapshot.findMany({
+    distinct: ["date"],
+    orderBy: { date: "desc" },
+    take: 2,
+    select: { date: true },
+  });
+  if (dates.length < 2) return new Map();
+  const [latest, prev] = [dates[0].date, dates[1].date];
+  const [a, b] = await Promise.all([
+    prisma.projectionSnapshot.findMany({ where: { date: latest }, select: { playerId: true, valueScore: true } }),
+    prisma.projectionSnapshot.findMany({ where: { date: prev }, select: { playerId: true, valueScore: true } }),
+  ]);
+  const prevBy = new Map(b.map((s) => [s.playerId, s.valueScore]));
+  const deltas = new Map<string, number>();
+  for (const s of a) {
+    const p = prevBy.get(s.playerId);
+    if (p !== undefined) deltas.set(s.playerId, Math.round((s.valueScore - p) * 10) / 10);
+  }
+  return deltas;
+}

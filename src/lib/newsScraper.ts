@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import { prisma } from "./db";
-import { translateToGreek, sourceLang } from "./translate";
+import { translateToGreek, translateBatchViaClaude, sourceLang, hasClaudeKey } from "./translate";
 
 export interface RssItem {
   title: string;
@@ -209,24 +209,54 @@ export async function scrapeNews(): Promise<{ fetched: number; stored: number; t
 }
 
 // Auto-translate NewsItem titles to Greek (title is what the feed/ticker show).
-// Runs sequentially with a small gap to stay friendly to the free API; caps
-// per run so it never dominates the cron budget.
-export async function translatePendingNews(limit = 60): Promise<number> {
+//   • ANTHROPIC_API_KEY set  → Claude (claude-opus-4-8), batched, best quality.
+//   • otherwise              → MyMemory free API, one call per item, paced.
+// `retranslate: true` reprocesses ALL rows (used to upgrade existing MyMemory
+// translations after enabling Claude); default only fills untranslated rows.
+export async function translatePendingNews(
+  limit = 60,
+  opts: { retranslate?: boolean } = {}
+): Promise<number> {
   const pending = await prisma.newsItem.findMany({
-    where: { titleEl: null },
+    where: opts.retranslate ? {} : { titleEl: null },
     orderBy: { publishedAt: "desc" },
     take: limit,
     select: { id: true, title: true, source: true },
   });
+  if (pending.length === 0) return 0;
 
   let done = 0;
+
+  if (hasClaudeKey()) {
+    // Claude: batch in chunks to bound output tokens; one failed chunk is skipped.
+    const CHUNK = 40;
+    for (let i = 0; i < pending.length; i += CHUNK) {
+      const chunk = pending.slice(i, i + CHUNK).map((n) => ({
+        id: n.id,
+        text: n.title,
+        from: sourceLang(n.source),
+      }));
+      let map = new Map<string, string>();
+      try {
+        map = await translateBatchViaClaude(chunk);
+      } catch {
+        continue; // translation failure must not break the scrape/cron
+      }
+      for (const [id, el] of map) {
+        await prisma.newsItem.update({ where: { id }, data: { titleEl: el } });
+        done++;
+      }
+    }
+    return done;
+  }
+
+  // MyMemory fallback: sequential with a small gap to stay friendly to the free tier.
   for (const n of pending) {
     const el = await translateToGreek(n.title, sourceLang(n.source));
     if (el) {
       await prisma.newsItem.update({ where: { id: n.id }, data: { titleEl: el } });
       done++;
     }
-    // gentle pacing for the free tier
     await new Promise((res) => setTimeout(res, 120));
   }
   return done;

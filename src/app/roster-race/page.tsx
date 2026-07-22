@@ -52,6 +52,7 @@ export default async function RosterRacePage() {
                     )}
                     <span className="flex shrink-0 items-center gap-2">
                       {e.lastFp !== null && <span className="stat text-[11px] text-slate-400">{e.lastFp.toFixed(1)} FP</span>}
+                      {e.fromTeam && <span className="stat text-[10px] text-emerald-400/70">{e.fromTeam} →</span>}
                       <span className={clsx("chip font-mono !text-[9px]", s.cls)}>{s.label}</span>
                     </span>
                   </li>

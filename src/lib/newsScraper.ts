@@ -155,6 +155,7 @@ export async function scrapeNews(): Promise<{ fetched: number; stored: number }>
     try {
       const r = await fetch(feed.url, {
         headers: { "User-Agent": "Mozilla/5.0 (EuroLeagueLobby)", Accept: "application/rss+xml,application/xml,*/*" },
+        signal: AbortSignal.timeout(15000),
       });
       if (!r.ok) continue;
       xml = await r.text();

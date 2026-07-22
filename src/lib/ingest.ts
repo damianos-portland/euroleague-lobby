@@ -46,7 +46,7 @@ const TEAM_META: Record<string, { city: string; country: string; c1: string; c2:
 };
 
 async function getJson(url: string): Promise<any> {
-  const r = await fetch(url, { headers: { Accept: "application/json" } });
+  const r = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(15000) });
   if (!r.ok) throw new Error(`${r.status} ${url}`);
   return r.json();
 }

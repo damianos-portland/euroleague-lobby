@@ -5,6 +5,7 @@
 
 import { prisma } from "./db";
 import { Position } from "./types";
+import { TEAM_BUDGETS } from "../data/budgets";
 
 export interface PlayerDTO {
   id: string;
@@ -212,6 +213,7 @@ export interface RosterRaceTeam {
     status: string;
     playerId: string | null;
     lastFp: number | null;
+    fromTeam: string | null;
   }[];
 }
 
@@ -231,7 +233,12 @@ export async function getRosterRace(season = "2026-27"): Promise<RosterRaceTeam[
       status: r.status,
       playerId: r.playerId,
       lastFp: r.player?.seasonStats[0]?.fantasyPoints ?? null,
+      fromTeam: r.status === "transfer" ? r.player?.seasonStats[0]?.teamSnapshot ?? null : null,
     });
+  }
+  // Clubs with no published roster yet must still appear (zero-signing cards).
+  for (const b of TEAM_BUDGETS) {
+    if (!byTeam.has(b.code)) byTeam.set(b.code, { teamCode: b.code, teamName: b.name, entries: [] });
   }
   return [...byTeam.values()].sort((a, b) => b.entries.length - a.entries.length);
 }

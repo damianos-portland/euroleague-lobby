@@ -17,6 +17,7 @@ import { computeFantasyPoints, Position } from "./types";
 import { fantasyFriendliness } from "./matchup";
 import { recomputeAllProjections } from "./recomputeAll";
 import { titleCase, splitStatsName } from "./names";
+import { rosterStatus } from "./rosterStatus";
 
 const V3 = "https://api-live.euroleague.net/v3/competitions/E/statistics";
 
@@ -298,7 +299,6 @@ export async function ingestRosters(
   const FEED =
     "https://feeds.incrowdsports.com/provider/euroleague-feeds/v2/competitions/E/seasons/" +
     seasonCode;
-  const { rosterStatus } = await import("./rosterStatus");
 
   const clubsRaw = await getJson(`${FEED}/clubs`);
   const clubs: any[] = clubsRaw.data ?? [];
@@ -312,18 +312,34 @@ export async function ingestRosters(
       seasonStats: { orderBy: { season: "desc" }, take: 1, select: { teamSnapshot: true } },
     },
   });
+  // Fallback: a stats-name that doesn't exactly match a DB player falls
+  // through to status "new" with playerId null — acceptable, since the
+  // rosterEntry upsert key is (season, teamCode, personCode), not this match.
   const byName = new Map(
     dbPlayers.map((p) => [`${p.firstName.toLowerCase()}|${p.lastName.toLowerCase()}`, p])
   );
 
+  // Fetch every club's roster people in parallel first. A failed fetch
+  // resolves to `null` (distinct from a successful-but-empty `[]`) so it can
+  // be excluded from the stale-entry sweep below.
+  const peopleByClub = await Promise.all(
+    clubs.map(async (c) => {
+      try {
+        const people: any[] = await getJson(`${FEED}/clubs/${c.code}/people`);
+        return { club: c, people };
+      } catch {
+        return { club: c, people: null as any[] | null }; // clubs without a published roster yet are fine
+      }
+    })
+  );
+
+  // Sequential upsert loop (safe for the connection pool), tracking every
+  // personCode touched per club that had a successful fetch.
   let entries = 0;
-  for (const c of clubs) {
-    let people: any[] = [];
-    try {
-      people = await getJson(`${FEED}/clubs/${c.code}/people`);
-    } catch {
-      continue; // clubs without a published roster yet are fine
-    }
+  const touchedByClub = new Map<string, string[]>();
+  for (const { club: c, people } of peopleByClub) {
+    if (!people) continue; // failed fetch: skip club entirely, never sweep it
+    const touched: string[] = [];
     for (const rec of people) {
       if (rec.typeName !== "Player" || !rec.person?.code) continue;
       const { first, last } = splitStatsName(rec.person.name || "");
@@ -347,8 +363,19 @@ export async function ingestRosters(
         create: { season: SEASON, teamCode: c.code, personCode: rec.person.code, ...data },
       });
       entries++;
+      touched.push(rec.person.code);
     }
+    touchedByClub.set(c.code, touched);
   }
+
+  // Stale-entry sweep: drop RosterEntry rows for this season that weren't
+  // touched this run, but only for clubs whose fetch succeeded.
+  for (const [code, codes] of touchedByClub) {
+    await prisma.rosterEntry.deleteMany({
+      where: { season: SEASON, teamCode: code, personCode: { notIn: [...codes] } },
+    });
+  }
+
   return { season: SEASON, teams: clubs.length, entries };
 }
 

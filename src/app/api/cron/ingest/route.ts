@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ingestLiveSeason } from "@/lib/ingest";
+import { ingestLiveSeason, ingestRosters, snapshotProjections } from "@/lib/ingest";
+import { scrapeNews } from "@/lib/newsScraper";
 
-// Prisma needs the Node.js runtime; never statically evaluate this route.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// Allow up to 60s (Vercel Hobby max) for the full refresh + recompute.
 export const maxDuration = 60;
 
-// Daily EuroLeague data refresh. Triggered by Vercel Cron (see vercel.json),
-// which sends `Authorization: Bearer ${CRON_SECRET}` when CRON_SECRET is set.
-// Also callable manually with the same header for an on-demand refresh.
+// Daily refresh: stats -> next-season rosters -> news -> snapshot.
+// One failing step must not kill the rest.
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (secret) {
@@ -20,10 +18,20 @@ export async function GET(req: NextRequest) {
   }
 
   const startedAt = Date.now();
-  try {
-    const result = await ingestLiveSeason();
-    return NextResponse.json({ ok: true, ...result, ms: Date.now() - startedAt });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message ?? String(e) }, { status: 500 });
-  }
+  const steps: Record<string, unknown> = {};
+  const run = async (name: string, fn: () => Promise<unknown>) => {
+    try {
+      steps[name] = await fn();
+    } catch (e: any) {
+      steps[name] = { error: e?.message ?? String(e) };
+    }
+  };
+
+  await run("stats", () => ingestLiveSeason());
+  await run("rosters", () => ingestRosters());
+  await run("news", () => scrapeNews());
+  await run("snapshot", () => snapshotProjections());
+
+  const failed = Object.values(steps).some((s: any) => s && typeof s === "object" && "error" in s);
+  return NextResponse.json({ ok: !failed, steps, ms: Date.now() - startedAt }, { status: failed ? 500 : 200 });
 }

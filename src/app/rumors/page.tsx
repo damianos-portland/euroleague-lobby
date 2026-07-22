@@ -10,7 +10,7 @@ export default async function RumorsPage() {
     id: i.id,
     url: i.url,
     source: i.source,
-    title: i.title,
+    title: i.titleEl ?? i.title,
     publishedAt: i.publishedAt.toISOString(),
     kind: i.kind,
     confidence: i.confidence,
@@ -24,7 +24,7 @@ export default async function RumorsPage() {
       <PageHeader
         title="Rumor Mill"
         status="● FEED LIVE · ΑΝΑΝΕΩΣΗ ΚΑΘΗΜΕΡΙΝΑ 06:00 UTC"
-        subtitle="Μεταγραφικά νέα & φήμες από Eurohoops/Sportando — αυτόματα ταξινομημένα, με confidence και matched παίκτες."
+        subtitle="Μεταγραφικά νέα & φήμες από Eurohoops/Sportando — αυτόματα μεταφρασμένα στα ελληνικά, ταξινομημένα, με confidence και matched παίκτες."
       />
       <RumorsFeed items={rows} teams={teams} />
     </>

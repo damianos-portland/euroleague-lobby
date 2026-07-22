@@ -35,15 +35,15 @@ export default async function LobbyPage() {
   // Ticker: news + roster meta item.
   const signedTotal = rosterRace.reduce((s, t) => s + t.entries.length, 0);
   const tickerItems: TickerItem[] = [
-    ...news.map((n) => ({
-      id: n.id,
-      kind: (n.kind === "official" || n.kind === "rumor" ? n.kind : "news") as TickerItem["kind"],
-      text:
-        n.kind === "rumor"
-          ? `${n.title.toUpperCase().slice(0, 70)} [${n.confidence}%]`
-          : n.title.toUpperCase().slice(0, 70),
-      href: n.url,
-    })),
+    ...news.map((n) => {
+      const title = (n.titleEl ?? n.title).toUpperCase().slice(0, 70);
+      return {
+        id: n.id,
+        kind: (n.kind === "official" || n.kind === "rumor" ? n.kind : "news") as TickerItem["kind"],
+        text: n.kind === "rumor" ? `${title} [${n.confidence}%]` : title,
+        href: n.url,
+      };
+    }),
     { id: "meta-rosters", kind: "meta" as const, text: `ROSTERS 2026-27: ${signedTotal}/${20 * ROSTER_REF} SIGNED` },
   ];
 
@@ -79,7 +79,7 @@ export default async function LobbyPage() {
           icon={<Newspaper size={13} />}
           title="RUMOR MILL"
           stat={activeRumors}
-          sub={topRumor ? `top: ${topRumor.title.slice(0, 40)}…` : "καμία ενεργή φήμη"}
+          sub={topRumor ? `top: ${(topRumor.titleEl ?? topRumor.title).slice(0, 40)}…` : "καμία ενεργή φήμη"}
         />
         <BoardCard
           href="/roster-race"

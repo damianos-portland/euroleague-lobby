@@ -388,6 +388,7 @@ model NewsItem {
   url         String   @unique // dedupe key
   source      String // "eurohoops" | "sportando"
   title       String
+  titleEl     String? // Greek auto-translation of title (null = untranslated yet / fell back)
   summary     String   @default("")
   publishedAt DateTime
   // kind: "official" | "rumor" | "news"

@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import { prisma } from "./db";
+import { translateToGreek, sourceLang } from "./translate";
 
 export interface RssItem {
   title: string;
@@ -144,7 +145,7 @@ export function matchEntities(
 // ---------------------------------------------------------------------------
 // Orchestrator: fetch feeds, classify, upsert. Keeps newest 500 items.
 // ---------------------------------------------------------------------------
-export async function scrapeNews(): Promise<{ fetched: number; stored: number }> {
+export async function scrapeNews(): Promise<{ fetched: number; stored: number; translated: number }> {
   const players = await prisma.player.findMany({
     select: { id: true, firstName: true, lastName: true },
   });
@@ -199,5 +200,34 @@ export async function scrapeNews(): Promise<{ fetched: number; stored: number }>
   if (excess.length > 0) {
     await prisma.newsItem.deleteMany({ where: { id: { in: excess.map((e) => e.id) } } });
   }
-  return { fetched, stored };
+
+  // Translate any item still lacking a Greek title (backfills old rows + new
+  // ones). Idempotent, so remaining items get picked up on the next run.
+  const translated = await translatePendingNews();
+
+  return { fetched, stored, translated };
+}
+
+// Auto-translate NewsItem titles to Greek (title is what the feed/ticker show).
+// Runs sequentially with a small gap to stay friendly to the free API; caps
+// per run so it never dominates the cron budget.
+export async function translatePendingNews(limit = 60): Promise<number> {
+  const pending = await prisma.newsItem.findMany({
+    where: { titleEl: null },
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+    select: { id: true, title: true, source: true },
+  });
+
+  let done = 0;
+  for (const n of pending) {
+    const el = await translateToGreek(n.title, sourceLang(n.source));
+    if (el) {
+      await prisma.newsItem.update({ where: { id: n.id }, data: { titleEl: el } });
+      done++;
+    }
+    // gentle pacing for the free tier
+    await new Promise((res) => setTimeout(res, 120));
+  }
+  return done;
 }

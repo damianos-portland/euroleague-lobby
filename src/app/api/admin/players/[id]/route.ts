@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/authz";
 
 const PLAYER_FIELDS = ["firstName", "lastName", "position", "nationality", "age", "teamId", "status", "depthRole", "fantasyPrice", "tags"];
 
-// Edit a player (team change, price, projected role, status, etc.). If a roster
-// move is implied (team changed), log it.
+// Edit a player (team change, price, projected role, status, etc.). Admin-only.
+// If a roster move is implied (team changed), log it.
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const b = await req.json();
   const existing = await prisma.player.findUnique({ where: { id: params.id }, include: { team: true } });
   if (!existing) return NextResponse.json({ error: "Player not found" }, { status: 404 });
@@ -33,8 +36,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ player });
 }
 
-// Manual projection override.
+// Manual projection override. Admin-only.
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const b = await req.json();
   const proj = await prisma.projection.update({
     where: { playerId: params.id },
@@ -44,6 +49,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   await prisma.player.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });
 }

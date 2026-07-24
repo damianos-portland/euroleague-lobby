@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
 import { PlayerDTO } from "@/lib/queries";
 import { POSITIONS } from "@/lib/types";
 import { PosBadge, RecBadge } from "@/components/ui";
-import { RefreshCw, Save, Trash2, Upload, UserPlus, Search, Languages } from "lucide-react";
+import { RefreshCw, Save, Trash2, Upload, UserPlus, Search, Languages, ShieldCheck, ShieldOff } from "lucide-react";
 
 interface TeamLite { id: string; shortName: string; name: string }
 interface RoomLite { id: string; name: string; status: string }
@@ -13,14 +14,20 @@ interface RoomLite { id: string; name: string; status: string }
 const STATUSES = ["signed", "rumored", "free_agent", "injured", "departing"];
 const ROLES = ["starter", "rotation", "bench", "deep_bench", "unknown"];
 
+interface UserLite { id: string; email: string; name: string; role: string }
+
 export function AdminPanel({
   initialPlayers,
   teams,
   rooms,
+  users,
+  currentUserId,
 }: {
   initialPlayers: PlayerDTO[];
   teams: TeamLite[];
   rooms: RoomLite[];
+  users: UserLite[];
+  currentUserId: string;
 }) {
   const router = useRouter();
   const [players] = useState(initialPlayers);
@@ -88,6 +95,8 @@ export function AdminPanel({
           Ξαναμεταφράζει όλους τους τίτλους των news στα ελληνικά (Claude αν υπάρχει key, αλλιώς MyMemory).
         </span>
       </div>
+
+      <UsersSection users={users} currentUserId={currentUserId} onFlash={flash} />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Player list + edit */}
@@ -324,5 +333,96 @@ function L({ label, children }: { label: string; children: React.ReactNode }) {
       <span className="mb-1 block text-[11px] text-slate-400">{label}</span>
       {children}
     </label>
+  );
+}
+
+// --- Users & roles management ---------------------------------------------
+function UsersSection({
+  users,
+  currentUserId,
+  onFlash,
+}: {
+  users: { id: string; email: string; name: string; role: string }[];
+  currentUserId: string;
+  onFlash: (msg: string) => void;
+}) {
+  const router = useRouter();
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function setRole(userId: string, role: "admin" | "user") {
+    setBusyId(userId);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, role }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onFlash(data?.error ?? "Σφάλμα.");
+        return;
+      }
+      onFlash(`Ο ρόλος ενημερώθηκε σε ${role}.`);
+      router.refresh();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <section className="card card-pad">
+      <h2 className="mb-3 text-sm font-bold text-white">Users &amp; roles ({users.length})</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[520px]">
+          <thead>
+            <tr className="border-b border-white/5">
+              <th className="th">Name</th>
+              <th className="th">Email</th>
+              <th className="th">Role</th>
+              <th className="th text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => {
+              const isAdmin = u.role === "admin";
+              const self = u.id === currentUserId;
+              return (
+                <tr key={u.id} className="border-b border-white/5">
+                  <td className="td font-semibold text-white">
+                    {u.name} {self && <span className="text-[10px] text-slate-500">(εσύ)</span>}
+                  </td>
+                  <td className="td font-mono text-xs text-slate-400">{u.email}</td>
+                  <td className="td">
+                    <span className={clsx("chip font-mono", isAdmin ? "bg-brand-500/15 text-brand-300" : "bg-white/5 text-slate-300")}>
+                      {u.role.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="td text-right">
+                    {isAdmin ? (
+                      <button
+                        className="btn-ghost !px-2 !py-1 text-xs"
+                        disabled={busyId === u.id || self}
+                        title={self ? "Δεν μπορείς να αφαιρέσεις τον δικό σου ρόλο" : "Υποβίβαση σε user"}
+                        onClick={() => setRole(u.id, "user")}
+                      >
+                        <ShieldOff size={14} /> Make user
+                      </button>
+                    ) : (
+                      <button
+                        className="btn-ghost !px-2 !py-1 text-xs"
+                        disabled={busyId === u.id}
+                        onClick={() => setRole(u.id, "admin")}
+                      >
+                        <ShieldCheck size={14} /> Make admin
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }

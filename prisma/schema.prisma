@@ -26,6 +26,9 @@ model User {
   name      String
   // role: "user" | "admin"
   role      String   @default("user")
+  // bcrypt hash for email+password login (null for OAuth-only accounts)
+  passwordHash String?
+  image     String?
   createdAt DateTime @default(now())
 
   watchlist    WatchlistItem[]

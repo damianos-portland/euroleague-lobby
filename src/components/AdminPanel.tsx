@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { PlayerDTO } from "@/lib/queries";
 import { POSITIONS } from "@/lib/types";
 import { PosBadge, RecBadge } from "@/components/ui";
-import { RefreshCw, Save, Trash2, Upload, UserPlus, Search } from "lucide-react";
+import { RefreshCw, Save, Trash2, Upload, UserPlus, Search, Languages } from "lucide-react";
 
 interface TeamLite { id: string; shortName: string; name: string }
 interface RoomLite { id: string; name: string; status: string }
@@ -28,6 +28,7 @@ export function AdminPanel({
   const [editing, setEditing] = useState<PlayerDTO | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [recalcing, setRecalcing] = useState(false);
+  const [translating, setTranslating] = useState(false);
 
   const filtered = useMemo(
     () => players.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase())).slice(0, 60),
@@ -51,6 +52,18 @@ export function AdminPanel({
     }
   }
 
+  async function retranslate() {
+    setTranslating(true);
+    try {
+      const res = await fetch("/api/admin/retranslate", { method: "POST" });
+      const data = await res.json();
+      flash(`Re-translated ${data.translated} τίτλους (${data.engine}).`);
+      router.refresh();
+    } finally {
+      setTranslating(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       {toast && (
@@ -66,6 +79,13 @@ export function AdminPanel({
         </button>
         <span className="text-xs text-slate-400">
           Τρέχει ξανά projection + value engine για όλους τους παίκτες με βάση τα τρέχοντα δεδομένα.
+        </span>
+
+        <button className="btn-ghost" onClick={retranslate} disabled={translating}>
+          <Languages size={16} className={translating ? "animate-spin" : ""} /> Re-translate news
+        </button>
+        <span className="text-xs text-slate-400">
+          Ξαναμεταφράζει όλους τους τίτλους των news στα ελληνικά (Claude αν υπάρχει key, αλλιώς MyMemory).
         </span>
       </div>
 

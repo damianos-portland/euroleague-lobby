@@ -36,7 +36,7 @@ export default async function LobbyPage() {
   const signedTotal = rosterRace.reduce((s, t) => s + t.entries.length, 0);
   const tickerItems: TickerItem[] = [
     ...news.map((n) => {
-      const title = (n.titleEl ?? n.title).toUpperCase().slice(0, 70);
+      const title = n.title.toUpperCase().slice(0, 70);
       return {
         id: n.id,
         kind: (n.kind === "official" || n.kind === "rumor" ? n.kind : "news") as TickerItem["kind"],
@@ -79,7 +79,7 @@ export default async function LobbyPage() {
           icon={<Newspaper size={13} />}
           title="RUMOR MILL"
           stat={activeRumors}
-          sub={topRumor ? `top: ${(topRumor.titleEl ?? topRumor.title).slice(0, 40)}…` : "καμία ενεργή φήμη"}
+          sub={topRumor ? `top: ${topRumor.title.slice(0, 40)}…` : "καμία ενεργή φήμη"}
         />
         <BoardCard
           href="/roster-race"

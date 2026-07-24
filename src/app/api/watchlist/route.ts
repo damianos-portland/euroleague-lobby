@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { auth } from "@/auth";
 
-// Toggle a player on/off the current user's watchlist.
+// Toggle a player on/off the CURRENT user's watchlist. The user id comes from
+// the session — never trust a client-supplied userId.
 export async function POST(req: NextRequest) {
-  const { userId, playerId } = await req.json();
-  if (!userId || !playerId) {
-    return NextResponse.json({ error: "userId and playerId required" }, { status: 400 });
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { playerId } = await req.json().catch(() => ({}));
+  if (!playerId) {
+    return NextResponse.json({ error: "playerId required" }, { status: 400 });
   }
+
   const existing = await prisma.watchlistItem.findUnique({
     where: { userId_playerId: { userId, playerId } },
   });

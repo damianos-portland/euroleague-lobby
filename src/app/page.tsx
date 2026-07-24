@@ -3,12 +3,12 @@ import { prisma } from "@/lib/db";
 import {
   getTopByValue,
   getAlerts,
-  getDemoUser,
   getWatchlist,
   getNewsItems,
   getRosterRace,
   getValueDeltas,
 } from "@/lib/queries";
+import { auth } from "@/auth";
 import { PageHeader } from "@/components/PageHeader";
 import { RecBadge, SignalBadge, PosBadge, Meter, valueTone } from "@/components/ui";
 import { Ticker, BoardCard, DeltaTag, TickerItem } from "@/components/desk";
@@ -20,17 +20,17 @@ export const dynamic = "force-dynamic";
 const ROSTER_REF = 16;
 
 export default async function LobbyPage() {
-  const [market, news, rosterRace, deltas, alerts, demo, activeRumors, topRumor] = await Promise.all([
+  const session = await auth();
+  const [market, news, rosterRace, deltas, alerts, activeRumors, topRumor] = await Promise.all([
     getTopByValue(15),
     getNewsItems(12),
     getRosterRace(),
     getValueDeltas(),
     getAlerts(6),
-    getDemoUser(),
     prisma.newsItem.count({ where: { kind: "rumor" } }),
     prisma.newsItem.findFirst({ where: { kind: "rumor" }, orderBy: { publishedAt: "desc" } }),
   ]);
-  const watchlist = demo ? await getWatchlist(demo.id) : [];
+  const watchlist = session?.user?.id ? await getWatchlist(session.user.id) : [];
 
   // Ticker: news + roster meta item.
   const signedTotal = rosterRace.reduce((s, t) => s + t.entries.length, 0);
@@ -190,7 +190,7 @@ export default async function LobbyPage() {
         <section className="card card-pad">
           <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
             <Star size={16} className="text-amber-400" /> Watchlist
-            {demo && <span className="text-xs font-normal text-slate-500">({demo.name})</span>}
+            {session?.user?.name && <span className="text-xs font-normal text-slate-500">({session.user.name})</span>}
           </h2>
           <ul className="space-y-2">
             {watchlist.length === 0 && <li className="text-sm text-slate-500">Άδειο watchlist.</li>}

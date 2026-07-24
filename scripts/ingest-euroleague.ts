@@ -9,15 +9,22 @@
 // room exist so a brand-new database is immediately usable.
 // ---------------------------------------------------------------------------
 
+import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/db";
 import { ingestLiveSeason, ingestRosters, snapshotProjections } from "../src/lib/ingest";
 import { scrapeNews } from "../src/lib/newsScraper";
 
 async function ensureScaffold() {
+  // Seed an admin login. ADMIN_EMAIL / ADMIN_PASSWORD override the defaults;
+  // the password is (re)set only when provided so re-runs don't clobber a
+  // changed password.
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@euroleaguelobby.dev").toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || "changeme-admin-8char";
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
   const admin = await prisma.user.upsert({
-    where: { email: "admin@euroleaguelobby.dev" },
-    update: {},
-    create: { email: "admin@euroleaguelobby.dev", name: "Lobby Admin", role: "admin" },
+    where: { email: adminEmail },
+    update: { role: "admin", passwordHash },
+    create: { email: adminEmail, name: "Lobby Admin", role: "admin", passwordHash },
   });
   const demo = await prisma.user.upsert({
     where: { email: "demo@euroleaguelobby.dev" },

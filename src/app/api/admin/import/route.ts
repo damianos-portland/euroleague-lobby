@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { computeFantasyPoints } from "@/lib/types";
+import { requireAdmin } from "@/lib/authz";
 
 // Import players (and optional last-season stats) from JSON array or CSV text.
-// CSV header (any subset, order-independent):
+// Admin-only. CSV header (any subset, order-independent):
 //   firstName,lastName,position,nationality,age,teamShort,status,depthRole,
 //   fantasyPrice,tags,season,minutes,points,rebounds,assists,steals,blocks,turnovers,usage,pir
 export async function POST(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const { format, payload } = await req.json();
   let rows: any[] = [];
   try {

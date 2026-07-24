@@ -5,11 +5,9 @@ import { Star } from "lucide-react";
 import clsx from "clsx";
 
 export function WatchlistButton({
-  userId,
   playerId,
   initial,
 }: {
-  userId: string;
   playerId: string;
   initial: boolean;
 }) {
@@ -22,7 +20,7 @@ export function WatchlistButton({
       const res = await fetch("/api/watchlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, playerId }),
+        body: JSON.stringify({ playerId }), // user derived from session server-side
       });
       const data = await res.json();
       setWatched(data.watched);

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getPlayer, toPlayerDTO, getDemoUser } from "@/lib/queries";
+import { getPlayer, toPlayerDTO } from "@/lib/queries";
+import { auth } from "@/auth";
 import { PageHeader } from "@/components/PageHeader";
 import {
   PosBadge, RecBadge, SignalBadge, StatusBadge, RiskBadge, Meter, Stat, valueTone,
@@ -17,11 +18,11 @@ export default async function PlayerPage({ params }: { params: { id: string } })
   const player = await getPlayer(params.id);
   if (!player) notFound();
 
-  const [seasonRows, injuries, moves, demo, teammatesRaw] = await Promise.all([
+  const session = await auth();
+  const [seasonRows, injuries, moves, teammatesRaw] = await Promise.all([
     prisma.playerSeasonStat.findMany({ where: { playerId: player.id }, orderBy: { season: "desc" } }),
     prisma.injuryEvent.findMany({ where: { playerId: player.id }, orderBy: { occurredAt: "desc" } }),
     prisma.rosterMove.findMany({ where: { playerId: player.id }, orderBy: { occurredAt: "desc" }, include: { fromTeam: true, toTeam: true } }),
-    getDemoUser(),
     player.teamId
       ? prisma.player.findMany({ where: { teamId: player.teamId, NOT: { id: player.id } }, include: { team: true, projection: true, seasonStats: { orderBy: { season: "desc" } } } })
       : Promise.resolve([]),
@@ -34,8 +35,8 @@ export default async function PlayerPage({ params }: { params: { id: string } })
     .sort((a, b) => (b.last?.usage ?? 0) - (a.last?.usage ?? 0))
     .slice(0, 4);
 
-  const watched = demo
-    ? !!(await prisma.watchlistItem.findUnique({ where: { userId_playerId: { userId: demo.id, playerId: player.id } } }))
+  const watched = session?.user?.id
+    ? !!(await prisma.watchlistItem.findUnique({ where: { userId_playerId: { userId: session.user.id, playerId: player.id } } }))
     : false;
 
   const proj = player.proj;
@@ -72,7 +73,7 @@ export default async function PlayerPage({ params }: { params: { id: string } })
               <SignalBadge signal={proj?.signal} />
               <RiskBadge level={risk} />
             </div>
-            {demo && <WatchlistButton userId={demo.id} playerId={player.id} initial={watched} />}
+            {session?.user?.id && <WatchlistButton playerId={player.id} initial={watched} />}
           </div>
         </div>
         {proj?.rationale && (

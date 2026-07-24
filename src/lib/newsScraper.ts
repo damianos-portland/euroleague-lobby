@@ -5,7 +5,6 @@
 // ---------------------------------------------------------------------------
 
 import { prisma } from "./db";
-import { translateToGreek, translateBatchViaClaude, sourceLang, hasClaudeKey } from "./translate";
 
 export interface RssItem {
   title: string;
@@ -19,34 +18,41 @@ export interface Classification {
   confidence: number; // 0 unless rumor
 }
 
-export const FEEDS: { source: string; url: string }[] = [
-  { source: "eurohoops", url: "https://www.eurohoops.net/en/feed/" },
-  { source: "sportando", url: "https://sportando.basketball/feed/" },
+// Greek + English EuroLeague news feeds only.
+//   • curated      → already EuroLeague-scoped; keep every item.
+//   • requireGreek → keep only items whose title has Greek script (the Greek
+//                    edition cross-posts a little Turkish/English we filter out).
+// Non-curated feeds also pass the EuroLeague relevance filter.
+export const FEEDS: { source: string; url: string; curated?: boolean; requireGreek?: boolean }[] = [
+  { source: "eurohoops", url: "https://www.eurohoops.net/en/euroleague/feed/", curated: true }, // English (EuroLeague)
+  { source: "eurohoops-gr", url: "https://www.eurohoops.net/feed/", requireGreek: true },         // Greek
+  { source: "talkbasket", url: "https://www.talkbasket.net/feed" },                                // English
 ];
 
 // Club alias -> E-code for the 20 EuroLeague clubs (lowercase substrings).
+// Includes Greek forms so Greek-language articles match team chips too.
 export const CLUB_ALIASES: Record<string, string[]> = {
-  MAD: ["real madrid"],
-  BAR: ["barcelona", "barça"],
-  PAN: ["panathinaikos"],
-  OLY: ["olympiacos"],
-  ULK: ["fenerbahce", "fenerbahçe"],
-  IST: ["anadolu efes", "efes"],
-  MCO: ["monaco"],
-  ASV: ["asvel", "villeurbanne"],
-  PRS: ["paris basketball"],
-  MIL: ["olimpia milano", "milan", "armani"],
-  VIR: ["virtus bologna", "virtus"],
-  RED: ["crvena zvezda", "red star"],
-  PAR: ["partizan"],
-  MUN: ["bayern"],
-  BAS: ["baskonia"],
-  PAM: ["valencia basket", "valencia"],
-  ZAL: ["zalgiris", "žalgiris"],
-  TEL: ["maccabi tel aviv", "maccabi"],
-  HTA: ["hapoel tel aviv", "hapoel"],
-  DUB: ["dubai basketball", "dubai"],
-  BES: ["besiktas", "beşiktaş"], // 2026-27 newcomer
+  MAD: ["real madrid", "ρεάλ μαδρίτης", "ρεάλ"],
+  BAR: ["barcelona", "barça", "μπαρτσελόνα", "μπάρτσα"],
+  PAN: ["panathinaikos", "παναθηναϊκός", "παναθηναϊκο"],
+  OLY: ["olympiacos", "ολυμπιακός", "ολυμπιακο"],
+  ULK: ["fenerbahce", "fenerbahçe", "φενέρμπαχτσε", "φενέρ"],
+  IST: ["anadolu efes", "efes", "έφες", "εφές"],
+  MCO: ["monaco", "μονακό"],
+  ASV: ["asvel", "villeurbanne", "ασβέλ"],
+  PRS: ["paris basketball", "παρί"],
+  MIL: ["olimpia milano", "armani", "μιλάνο", "αρμάνι"],
+  VIR: ["virtus bologna", "virtus", "βίρτους", "μπολόνια"],
+  RED: ["crvena zvezda", "red star", "ερυθρός αστέρας", "τσρβένα ζβέζντα"],
+  PAR: ["partizan", "παρτίζαν"],
+  MUN: ["bayern", "μπάγερν"],
+  BAS: ["baskonia", "μπασκόνια"],
+  PAM: ["valencia basket", "valencia", "βαλένθια", "βαλένσια"],
+  ZAL: ["zalgiris", "žalgiris", "ζάλγκιρις"],
+  TEL: ["maccabi tel aviv", "maccabi", "μακάμπι"],
+  HTA: ["hapoel tel aviv", "hapoel", "χάποελ"],
+  DUB: ["dubai basketball", "dubai", "ντουμπάι"],
+  BES: ["besiktas", "beşiktaş", "μπεσίκτας"],
 };
 
 function decodeEntities(s: string): string {
@@ -145,7 +151,7 @@ export function matchEntities(
 // ---------------------------------------------------------------------------
 // Orchestrator: fetch feeds, classify, upsert. Keeps newest 500 items.
 // ---------------------------------------------------------------------------
-export async function scrapeNews(): Promise<{ fetched: number; stored: number; translated: number }> {
+export async function scrapeNews(): Promise<{ fetched: number; stored: number }> {
   const players = await prisma.player.findMany({
     select: { id: true, firstName: true, lastName: true },
   });
@@ -166,11 +172,15 @@ export async function scrapeNews(): Promise<{ fetched: number; stored: number; t
     }
     for (const item of parseRss(xml)) {
       fetched++;
+      // Greek edition: drop the occasional cross-posted Turkish/English item.
+      if (feed.requireGreek && !/[\u0370-\u03ff]/.test(item.title)) continue;
       const text = `${item.title} ${item.description}`;
       const { playerId, teamCodes } = matchEntities(text, players);
-      // Keep only items about our league: a matched player, a matched club,
-      // or at least an explicit EuroLeague mention.
-      if (!playerId && teamCodes.length === 0 && !/euroleague/i.test(text)) continue;
+      // Curated feeds are already EuroLeague-only. For general feeds, keep only
+      // items about our league: a matched player, club, or a EuroLeague mention.
+      if (!feed.curated && !playerId && teamCodes.length === 0 && !/euroleague|ευρωλίγκα/i.test(text)) {
+        continue;
+      }
       const cls = classifyItem(item.title, item.description);
       await prisma.newsItem.upsert({
         where: { url: item.link },
@@ -201,63 +211,5 @@ export async function scrapeNews(): Promise<{ fetched: number; stored: number; t
     await prisma.newsItem.deleteMany({ where: { id: { in: excess.map((e) => e.id) } } });
   }
 
-  // Translate any item still lacking a Greek title (backfills old rows + new
-  // ones). Idempotent, so remaining items get picked up on the next run.
-  const translated = await translatePendingNews();
-
-  return { fetched, stored, translated };
-}
-
-// Auto-translate NewsItem titles to Greek (title is what the feed/ticker show).
-//   • ANTHROPIC_API_KEY set  → Claude (claude-opus-4-8), batched, best quality.
-//   • otherwise              → MyMemory free API, one call per item, paced.
-// `retranslate: true` reprocesses ALL rows (used to upgrade existing MyMemory
-// translations after enabling Claude); default only fills untranslated rows.
-export async function translatePendingNews(
-  limit = 60,
-  opts: { retranslate?: boolean } = {}
-): Promise<number> {
-  const pending = await prisma.newsItem.findMany({
-    where: opts.retranslate ? {} : { titleEl: null },
-    orderBy: { publishedAt: "desc" },
-    take: limit,
-    select: { id: true, title: true, source: true },
-  });
-  if (pending.length === 0) return 0;
-
-  let done = 0;
-
-  if (hasClaudeKey()) {
-    // Claude: batch in chunks to bound output tokens; one failed chunk is skipped.
-    const CHUNK = 40;
-    for (let i = 0; i < pending.length; i += CHUNK) {
-      const chunk = pending.slice(i, i + CHUNK).map((n) => ({
-        id: n.id,
-        text: n.title,
-        from: sourceLang(n.source),
-      }));
-      let map = new Map<string, string>();
-      try {
-        map = await translateBatchViaClaude(chunk);
-      } catch {
-        continue; // translation failure must not break the scrape/cron
-      }
-      for (const [id, el] of map) {
-        await prisma.newsItem.update({ where: { id }, data: { titleEl: el } });
-        done++;
-      }
-    }
-    return done;
-  }
-
-  // MyMemory fallback: sequential with a small gap to stay friendly to the free tier.
-  for (const n of pending) {
-    const el = await translateToGreek(n.title, sourceLang(n.source));
-    if (el) {
-      await prisma.newsItem.update({ where: { id: n.id }, data: { titleEl: el } });
-      done++;
-    }
-    await new Promise((res) => setTimeout(res, 120));
-  }
-  return done;
+  return { fetched, stored };
 }

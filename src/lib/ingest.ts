@@ -396,3 +396,148 @@ export async function snapshotProjections(): Promise<{ date: string; count: numb
   }
   return { date, count: projections.length };
 }
+
+// ---------------------------------------------------------------------------
+// Preseason roster transition: rebuild the Player base from the NEW season's
+// club rosters BEFORE any games are played. Returning players keep their last
+// season's stats (→ real projections); newcomers with no EuroLeague history
+// enter as "unproven" (no projection/value); players no longer rostered are
+// marked "departed". Teams carry last season's ratings until real stats arrive.
+// Once games are played, switch to the normal ingestLiveSeason(EL_SEASON_CODE).
+// ---------------------------------------------------------------------------
+export async function ingestPreseasonRoster(
+  seasonCode = process.env.EL_NEXT_SEASON_CODE || "E2026"
+): Promise<{ season: string; teams: number; returning: number; unproven: number; departed: number }> {
+  const SEASON = seasonLabel(seasonCode);
+  const FEED =
+    "https://feeds.incrowdsports.com/provider/euroleague-feeds/v2/competitions/E/seasons/" +
+    seasonCode;
+
+  const clubsRaw = await getJson(`${FEED}/clubs`);
+  const clubs: any[] = clubsRaw.data ?? [];
+
+  // Fetch every club's people in parallel (players + coach).
+  const peopleByClub = await Promise.all(
+    clubs.map(async (c) => {
+      try {
+        return { club: c, people: (await getJson(`${FEED}/clubs/${c.code}/people`)) as any[] };
+      } catch {
+        return { club: c, people: null as any[] | null };
+      }
+    })
+  );
+  const coachByClub = new Map<string, string>();
+  for (const { club: c, people } of peopleByClub) {
+    if (!people) continue;
+    const coach = people.find((r) => r.typeName === "Coach");
+    if (coach) coachByClub.set(c.code, titleCase(coach.person?.passportSurname || coach.person?.name || ""));
+  }
+
+  // Ensure a Team row exists for every club in the new season. Keep existing
+  // ratings (carried from last season); create missing clubs with league-avg
+  // placeholders so their players still have a team + matchup context.
+  const existingTeams = await prisma.team.findMany();
+  const avg = (k: keyof (typeof existingTeams)[number]) =>
+    existingTeams.length ? existingTeams.reduce((s, t) => s + Number(t[k] || 0), 0) / existingTeams.length : 0;
+  const placeholders = {
+    pace: round1(avg("pace")) || 74, offRating: round1(avg("offRating")) || 110, defRating: round1(avg("defRating")) || 110,
+    reboundsAllowed: round1(avg("reboundsAllowed")) || 34, assistsAllowed: round1(avg("assistsAllowed")) || 18,
+    turnoversForced: round1(avg("turnoversForced")) || 12, pointsAllowed: round1(avg("pointsAllowed")) || 84,
+    threePtAllowed: round1(avg("threePtAllowed")) || 9, fantasyFriendliness: 50,
+  };
+  const teamByCode = new Map(existingTeams.map((t) => [t.shortName, t]));
+  const teamIdByCode = new Map<string, string>();
+  for (const c of clubs) {
+    const coach = coachByClub.get(c.code) || "—";
+    const existing = teamByCode.get(c.code);
+    if (existing) {
+      teamIdByCode.set(c.code, existing.id);
+      await prisma.team.update({ where: { id: existing.id }, data: { name: c.name ?? existing.name, coach } });
+    } else {
+      const meta = TEAM_META[c.code] ?? { city: "—", country: "—", c1: "#ff5a1f", c2: "#0b0f1c" };
+      const row = await prisma.team.create({
+        data: {
+          name: c.name ?? c.code, shortName: c.code, city: meta.city, country: meta.country,
+          colorPrimary: meta.c1, colorSecondary: meta.c2, coach, playstyle: "—", ...placeholders,
+        },
+      });
+      teamIdByCode.set(c.code, row.id);
+    }
+  }
+
+  // Existing players by "first|last" name (+ whether they have any stat line).
+  const dbPlayers = await prisma.player.findMany({
+    select: { id: true, firstName: true, lastName: true, seasonStats: { take: 1, select: { id: true } } },
+  });
+  const byName = new Map(dbPlayers.map((p) => [`${p.firstName.toLowerCase()}|${p.lastName.toLowerCase()}`, p]));
+
+  const touchedIds = new Set<string>();
+  let returning = 0;
+  let unproven = 0;
+
+  for (const { club: c, people } of peopleByClub) {
+    if (!people || people.length === 0) continue; // incomplete fetch — don't touch this club's players
+    const teamId = teamIdByCode.get(c.code) ?? null;
+    for (const rec of people) {
+      if (rec.typeName !== "Player" || !rec.person?.code) continue;
+      const { first, last } = splitStatsName(rec.person.name || "");
+      if (!last) continue;
+      const person = rec.person;
+      const heightCm = num(person.height) || 0;
+      const position = refinePosition(person.positionName ?? null, {}, heightCm);
+      const nationality = person.country?.name || "—";
+      const matched = byName.get(`${first.toLowerCase()}|${last.toLowerCase()}`);
+
+      if (matched) {
+        const hasStats = matched.seasonStats.length > 0;
+        await prisma.player.update({
+          where: { id: matched.id },
+          data: {
+            teamId, position, nationality,
+            heightCm: heightCm > 0 ? heightCm : undefined,
+            status: hasStats ? "signed" : "unproven",
+          },
+        });
+        touchedIds.add(matched.id);
+        hasStats ? returning++ : unproven++;
+      } else {
+        const p = await prisma.player.create({
+          data: {
+            firstName: first, lastName: last, position, nationality,
+            age: num(person.age, 24), heightCm: heightCm > 0 ? heightCm : null,
+            teamId, status: "unproven", depthRole: "rotation", fantasyPrice: 5, tags: "unproven",
+          },
+        });
+        touchedIds.add(p.id);
+        unproven++;
+      }
+    }
+  }
+
+  // Players who were on a team last season but aren't on any new-season roster
+  // → left the league. Mark departed (keep the row for FK safety). Only run
+  // this sweep when EVERY club's roster fetched successfully — otherwise a
+  // failed club fetch would wrongly mark its whole roster as departed.
+  const allFetched = peopleByClub.every((x) => x.people && x.people.length > 0);
+  let departedCount = 0;
+  if (allFetched) {
+    const departedRes = await prisma.player.updateMany({
+      where: { id: { notIn: [...touchedIds] }, teamId: { not: null } },
+      data: { teamId: null, status: "departed" },
+    });
+    departedCount = departedRes.count;
+  }
+
+  // Recompute projections (skips statless players); then drop any lingering
+  // projection for a statless player so unproven never surface in value.
+  await recomputeAllProjections();
+  const statless = await prisma.player.findMany({
+    where: { seasonStats: { none: {} } },
+    select: { id: true },
+  });
+  if (statless.length) {
+    await prisma.projection.deleteMany({ where: { playerId: { in: statless.map((s) => s.id) } } });
+  }
+
+  return { season: SEASON, teams: clubs.length, returning, unproven, departed: departedCount };
+}

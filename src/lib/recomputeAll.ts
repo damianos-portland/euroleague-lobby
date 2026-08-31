@@ -40,6 +40,9 @@ export async function recomputeAllProjections(): Promise<number> {
 
   let count = 0;
   for (const p of players) {
+    // Unproven players (no EuroLeague stat history) get no projection — they
+    // must not appear in value rankings until they have real data.
+    if (p.seasonStats.length === 0) continue;
     const ctx = ctxById.get(p.id) ?? { positionCompetition: 1, availableUsageShare: 0.95 };
     const last = toLine(p.seasonStats[0]);
     const prior = toLine(p.seasonStats[1]);

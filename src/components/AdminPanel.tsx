@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { PlayerDTO } from "@/lib/queries";
 import { POSITIONS } from "@/lib/types";
 import { PosBadge, RecBadge } from "@/components/ui";
-import { RefreshCw, Save, Trash2, Upload, UserPlus, Search, Newspaper, ShieldCheck, ShieldOff } from "lucide-react";
+import { RefreshCw, Save, Trash2, Upload, UserPlus, Search, Newspaper, CalendarClock, ShieldCheck, ShieldOff } from "lucide-react";
 
 interface TeamLite { id: string; shortName: string; name: string }
 interface RoomLite { id: string; name: string; status: string }
@@ -36,6 +36,7 @@ export function AdminPanel({
   const [toast, setToast] = useState<string | null>(null);
   const [recalcing, setRecalcing] = useState(false);
   const [fetchingNews, setFetchingNews] = useState(false);
+  const [openingSeason, setOpeningSeason] = useState(false);
 
   const filtered = useMemo(
     () => players.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase())).slice(0, 60),
@@ -71,6 +72,19 @@ export function AdminPanel({
     }
   }
 
+  async function openSeason() {
+    if (!confirm("Άνοιγμα νέας σεζόν: ξαναχτίζει το roster των παικτών από τα νέα ρόστερ (returning κρατούν περσινά stats, newcomers = unproven, όσοι έφυγαν = departed). Συνέχεια;")) return;
+    setOpeningSeason(true);
+    try {
+      const res = await fetch("/api/admin/open-season", { method: "POST" });
+      const data = await res.json();
+      flash(`Σεζόν ${data.season}: ${data.returning} returning · ${data.unproven} unproven · ${data.departed} departed.`);
+      router.refresh();
+    } finally {
+      setOpeningSeason(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       {toast && (
@@ -93,6 +107,13 @@ export function AdminPanel({
         </button>
         <span className="text-xs text-slate-400">
           Τραβάει τώρα τα τελευταία νέα από τις πηγές (Eurohoops GR/EN, TalkBasket).
+        </span>
+
+        <button className="btn-ghost !text-brand-300" onClick={openSeason} disabled={openingSeason}>
+          <CalendarClock size={16} className={openingSeason ? "animate-spin" : ""} /> Άνοιγμα σεζόν 2026-27
+        </button>
+        <span className="text-xs text-slate-400">
+          Ξαναχτίζει το roster των παικτών από τα νέα ρόστερ (returning + unproven newcomers· departed όσοι έφυγαν).
         </span>
       </div>
 

@@ -5,6 +5,32 @@
 
 import { Position } from "./types";
 
+// ---------------------------------------------------------------------------
+// Draft lottery: draw a pick order weighted by each entry's tickets. Higher
+// weight → more likely to draw an early pick (NBA-style; give the worst team
+// the most tickets). Equal weights → a uniform (pure random) shuffle.
+// Returns the participant indices in pick order: result[0] gets pick #1.
+// ---------------------------------------------------------------------------
+export function drawLotteryOrder(weights: number[]): number[] {
+  const pool = weights.map((w, i) => ({ i, w: Math.max(1, Math.round(w) || 1) }));
+  const order: number[] = [];
+  while (pool.length > 0) {
+    const total = pool.reduce((s, p) => s + p.w, 0);
+    let r = Math.random() * total;
+    let idx = 0;
+    for (let k = 0; k < pool.length; k++) {
+      r -= pool[k].w;
+      if (r <= 0) {
+        idx = k;
+        break;
+      }
+    }
+    order.push(pool[idx].i);
+    pool.splice(idx, 1);
+  }
+  return order;
+}
+
 export interface DraftablePlayer {
   id: string;
   name: string;

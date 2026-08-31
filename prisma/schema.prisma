@@ -326,6 +326,10 @@ model DraftRoom {
   currentPickIndex Int @default(0) // 0-based overall pick number
   season    String @default("2025-26")
 
+  // Lottery: how many pick slots have been revealed so far (from the last pick
+  // upward). 0 = drawn but hidden; == #participants → fully revealed → ready.
+  lotteryRevealed Int @default(0)
+
   participants DraftParticipant[]
   picks        DraftPick[]
   queueItems   DraftQueueItem[]
@@ -341,8 +345,10 @@ model DraftParticipant {
   userId    String?
   user      User?  @relation(fields: [userId], references: [id])
   teamName  String
-  // draftOrder: seed position after the lottery (0-based)
+  // draftOrder: seed position after the lottery (0-based). -1 = not yet drawn.
   draftOrder Int
+  // Lottery weight (tickets/odds). Higher = more likely to draw an early pick.
+  weight    Int @default(1)
   isAutopick Boolean @default(false)
 
   picks      DraftPick[]

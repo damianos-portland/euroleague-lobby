@@ -19,6 +19,7 @@ import {
   HardHat,
   Wallet,
   LogOut,
+  Dice5,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -57,6 +58,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: "",
     items: [
       { href: "/draft", label: "Draft Mode 2026", icon: Trophy },
+      { href: "/admin/lottery", label: "Draft Lottery", icon: Dice5, adminOnly: true },
       { href: "/admin", label: "Admin", icon: BarChart3, adminOnly: true },
     ],
   },

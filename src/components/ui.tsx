@@ -44,6 +44,8 @@ const STATUS_STYLES: Record<string, { label: string; cls: string }> = {
   free_agent: { label: "Free Agent", cls: "bg-rose-500/10 text-rose-300" },
   injured: { label: "Injured", cls: "bg-rose-500/15 text-rose-300" },
   departing: { label: "Departing", cls: "bg-slate-500/10 text-slate-300" },
+  unproven: { label: "NEW · Unproven", cls: "bg-sky-500/15 text-sky-300" },
+  departed: { label: "Departed", cls: "bg-slate-500/15 text-slate-400" },
 };
 export function StatusBadge({ status }: { status: string }) {
   const s = STATUS_STYLES[status] ?? { label: status, cls: "bg-white/5 text-slate-300" };

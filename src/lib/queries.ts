@@ -177,7 +177,8 @@ export async function getWatchlist(userId: string) {
 export async function getTopByValue(limit = 20): Promise<PlayerDTO[]> {
   const rows = await prisma.player.findMany({
     include: playerInclude,
-    where: { projection: { isNot: null } },
+    // Exclude players who left the league (departed) from value rankings.
+    where: { projection: { isNot: null }, status: { not: "departed" } },
   });
   return rows
     .map(toPlayerDTO)

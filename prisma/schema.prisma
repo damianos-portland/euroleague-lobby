@@ -80,6 +80,9 @@ model Team {
 
 model Player {
   id        String  @id @default(cuid())
+  // Stable EuroLeague person code — robust match key across seasons/feeds
+  // (nullable for legacy rows; unique index allows multiple NULLs on Postgres).
+  personCode String? @unique
   firstName String
   lastName  String
   // position: "PG" | "SG" | "SF" | "PF" | "C"

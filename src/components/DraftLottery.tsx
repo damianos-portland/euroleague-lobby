@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { Dice5, Eye, RotateCcw, Trophy, Sparkles } from "lucide-react";
+import { LotteryDrum, DrumTeam, DrumReveal } from "@/components/LotteryDrum";
 
 interface Participant { id: string; teamName: string; weight: number; draftOrder: number }
 interface RoomState {
@@ -15,15 +16,46 @@ interface RoomState {
   participants: Participant[];
 }
 
+const TEAM_COLORS = [
+  "#f97316", "#22d3ee", "#a78bfa", "#34d399", "#f472b6", "#facc15",
+  "#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#38bdf8", "#fbbf24",
+  "#2dd4bf", "#f87171", "#818cf8", "#e879f9",
+];
+
 export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin: boolean }) {
   const [room, setRoom] = useState<RoomState>(initial);
   const [busy, setBusy] = useState(false);
-  const lastRevealed = useRef(initial.lotteryRevealed);
+  const [spinning, setSpinning] = useState(false);
+  const spinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const n = room.participants.length;
   const byPick = new Map(room.participants.map((p) => [p.draftOrder, p]));
   const totalWeight = room.participants.reduce((s, p) => s + Math.max(1, p.weight), 0) || 1;
   const oddsOf = (w: number) => Math.round((Math.max(1, w) / totalWeight) * 1000) / 10;
+
+  // Stable color per team (by original order).
+  const colorOf = new Map(room.participants.map((p, i) => [p.id, TEAM_COLORS[i % TEAM_COLORS.length]]));
+
+  const teams: DrumTeam[] = room.participants.map((p) => ({
+    id: p.id,
+    name: p.teamName,
+    weight: p.weight,
+    color: colorOf.get(p.id)!,
+  }));
+
+  // A team is still "in the drum" until its pick has been revealed.
+  // Reveal runs from the last pick (#n) up to #1, so revealed positions are pos >= n - revealed.
+  const activeIds = room.participants
+    .filter((p) => !room.drawn || p.draftOrder < n - room.lotteryRevealed)
+    .map((p) => p.id);
+
+  // Most recently revealed pick → shown in the chamber.
+  let latest: DrumReveal | null = null;
+  if (room.drawn && room.lotteryRevealed > 0) {
+    const pos = n - room.lotteryRevealed; // topmost revealed row
+    const p = byPick.get(pos);
+    if (p) latest = { id: p.id, name: p.teamName, pick: pos + 1, color: colorOf.get(p.id)! };
+  }
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/draft/lottery/${room.id}`, { cache: "no-store" });
@@ -40,12 +72,19 @@ export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin
     return () => clearInterval(t);
   }, [refresh, room.status]);
 
+  // Briefly agitate the drum whenever a new pick lands.
   useEffect(() => {
-    lastRevealed.current = room.lotteryRevealed;
-  }, [room.lotteryRevealed]);
+    setSpinning(true);
+    if (spinTimer.current) clearTimeout(spinTimer.current);
+    spinTimer.current = setTimeout(() => setSpinning(false), 1100);
+    return () => {
+      if (spinTimer.current) clearTimeout(spinTimer.current);
+    };
+  }, [room.lotteryRevealed, room.drawn]);
 
   async function act(action: string) {
     setBusy(true);
+    if (action === "revealNext" || action === "run") setSpinning(true);
     try {
       await fetch(`/api/draft/lottery/${room.id}`, {
         method: "POST",
@@ -61,7 +100,7 @@ export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin
   const fullyRevealed = room.drawn && room.lotteryRevealed >= n;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    <div className="mx-auto max-w-4xl space-y-5">
       <div className="text-center">
         <div className="mb-1 font-mono text-[11px] font-semibold tracking-wider text-brand-400">
           <Sparkles className="mr-1 inline" size={12} /> DRAFT LOTTERY
@@ -69,55 +108,69 @@ export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin
         <h1 className="text-2xl font-extrabold tracking-tight text-white">{room.name}</h1>
         <p className="mt-1 text-sm text-slate-400">
           {!room.drawn
-            ? `${n} ομάδες — έτοιμες για κλήρωση`
+            ? `${n} ομάδες μέσα στην κληρωτίδα — περισσότερο weight, περισσότερα μπαλάκια`
             : fullyRevealed
             ? "Η σειρά επιλογής κληρώθηκε ✓"
             : `Αποκάλυψη ${room.lotteryRevealed}/${n} — από το τελευταίο pick προς το #1`}
         </p>
       </div>
 
-      {/* Board: pick #1 at top … #N at bottom. Revealed from the bottom up. */}
-      <div className="card card-pad space-y-1.5">
-        {Array.from({ length: n }, (_, pos) => {
-          const revealed = room.drawn && pos >= n - room.lotteryRevealed;
-          const p = byPick.get(pos);
-          const isFirst = pos === 0;
-          const justRevealed = pos === n - room.lotteryRevealed; // top-most revealed row
-          return (
-            <div
-              key={pos}
-              className={clsx(
-                "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition",
-                revealed
-                  ? isFirst
-                    ? "border-brand-500/40 bg-brand-500/10"
-                    : "border-white/5 bg-white/[0.03]"
-                  : "border-white/5 bg-white/[0.015]",
-                justRevealed && "ring-1 ring-brand-500/40"
-              )}
-            >
-              <span
-                className={clsx(
-                  "stat grid h-8 w-8 shrink-0 place-items-center rounded-lg text-sm font-bold",
-                  isFirst ? "bg-brand-500/20 text-brand-300" : "bg-white/5 text-slate-300"
-                )}
-              >
-                {pos + 1}
-              </span>
-              <span className="flex-1 truncate text-sm font-semibold">
-                {revealed ? (
-                  <span className="text-white">{p?.teamName ?? "—"}</span>
-                ) : (
-                  <span className="font-mono tracking-widest text-slate-600">? ? ?</span>
-                )}
-              </span>
-              {isFirst && revealed && <Trophy size={15} className="text-brand-400" />}
-              {revealed && n > 2 && p && (
-                <span className="stat text-[10px] text-slate-500">{oddsOf(p.weight)}%</span>
-              )}
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* The machine */}
+        <div className="card card-pad flex items-center justify-center">
+          <LotteryDrum teams={teams} activeIds={activeIds} latest={latest} spinning={spinning} />
+        </div>
+
+        {/* Results ladder: #1 top … #N bottom, revealed from the bottom up */}
+        <div className="card card-pad">
+          <h2 className="section-title mb-3">Σειρά επιλογής</h2>
+          <div className="space-y-1.5">
+            {Array.from({ length: n }, (_, pos) => {
+              const revealed = room.drawn && pos >= n - room.lotteryRevealed;
+              const p = byPick.get(pos);
+              const isFirst = pos === 0;
+              const justRevealed = pos === n - room.lotteryRevealed;
+              const c = p ? colorOf.get(p.id)! : "#64748b";
+              return (
+                <div
+                  key={pos}
+                  className={clsx(
+                    "flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition",
+                    revealed
+                      ? isFirst
+                        ? "border-brand-500/40 bg-brand-500/10"
+                        : "border-white/5 bg-white/[0.03]"
+                      : "border-white/5 bg-white/[0.015]",
+                    justRevealed && "ring-1 ring-brand-500/40"
+                  )}
+                >
+                  <span
+                    className={clsx(
+                      "grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold",
+                      isFirst ? "bg-brand-500/20 text-brand-300" : "bg-white/5 text-slate-300"
+                    )}
+                  >
+                    {pos + 1}
+                  </span>
+                  {revealed && (
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: c }} />
+                  )}
+                  <span className="flex-1 truncate text-xs font-semibold">
+                    {revealed ? (
+                      <span className="text-white">{p?.teamName ?? "—"}</span>
+                    ) : (
+                      <span className="font-mono tracking-widest text-slate-600">? ? ?</span>
+                    )}
+                  </span>
+                  {isFirst && revealed && <Trophy size={13} className="text-brand-400" />}
+                  {revealed && n > 2 && p && (
+                    <span className="stat text-[10px] text-slate-500">{oddsOf(p.weight)}%</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Admin controls */}
@@ -130,7 +183,7 @@ export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin
           ) : (
             <>
               <button className="btn-primary" onClick={() => act("revealNext")} disabled={busy}>
-                <Eye size={16} /> Αποκάλυψη #{n - room.lotteryRevealed}
+                <Eye size={16} /> Τράβα μπαλάκι · #{n - room.lotteryRevealed}
               </button>
               <button className="btn-ghost" onClick={() => act("reset")} disabled={busy}>
                 <RotateCcw size={15} /> Reset

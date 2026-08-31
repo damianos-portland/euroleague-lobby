@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
+import { startDrumroll, stopDrumroll, ding, setMuted, unlockSound } from "@/lib/lotterySound";
 
 export interface DrumTeam {
   id: string;
@@ -67,7 +69,9 @@ export function LotteryDrum({
   spinRef.current = spinning;
 
   const [flash, setFlash] = useState(0);
+  const [muted, setMutedState] = useState(false);
   const prevLatest = useRef<string | null>(null);
+  const didMount = useRef(false);
 
   // Ball budget per team, proportional to weight (min 1).
   function countFor(weight: number): number {
@@ -138,14 +142,48 @@ export function LotteryDrum({
     ballsRef.current = balls;
   }, [activeIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // flash the chamber when a new pick is revealed
+  // flash + ding the chamber when a new pick is revealed
   useEffect(() => {
     if (latest && latest.id !== prevLatest.current) {
       prevLatest.current = latest.id;
       setFlash((f) => f + 1);
+      // don't ding for a pick already on screen at mount (page loaded mid-lottery)
+      if (didMount.current) {
+        const t = setTimeout(() => ding(), 520); // land the ding as the ball hits the chamber
+        return () => clearTimeout(t);
+      }
     }
     if (!latest) prevLatest.current = null;
+    didMount.current = true;
   }, [latest]);
+
+  // drumroll while the drum is agitated
+  useEffect(() => {
+    if (spinning) startDrumroll();
+    else stopDrumroll();
+  }, [spinning]);
+
+  // stop any audio when leaving the page
+  useEffect(() => () => stopDrumroll(), []);
+
+  // resume the audio context on the first interaction anywhere
+  useEffect(() => {
+    const unlock = () => unlockSound();
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
+  function toggleMute() {
+    setMutedState((m) => {
+      const next = !m;
+      setMuted(next);
+      return next;
+    });
+  }
 
   // physics + render loop
   useEffect(() => {
@@ -237,6 +275,14 @@ export function LotteryDrum({
 
   return (
     <div className="relative mx-auto w-full max-w-[420px]">
+      <button
+        onClick={toggleMute}
+        className="absolute right-1 top-1 z-10 rounded-lg p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
+        title={muted ? "Ενεργοποίηση ήχου" : "Σίγαση"}
+        aria-label={muted ? "Ενεργοποίηση ήχου" : "Σίγαση"}
+      >
+        {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+      </button>
       <canvas
         ref={canvasRef}
         style={{ width: "100%", height: "auto", aspectRatio: `${W} / ${H}` }}

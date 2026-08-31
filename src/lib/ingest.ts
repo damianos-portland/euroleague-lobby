@@ -106,6 +106,20 @@ function usageRate(s: any, team: any): number {
   return round1(Math.max(0, Math.min(60, (100 * pPlays * 40) / (min * tPlays))));
 }
 
+// Convert an ACCUMULATED (season-total) player stat row into per-game by
+// dividing every numeric field by gamesPlayed. Percentage fields are strings
+// and left untouched; gamesPlayed itself is preserved as the count.
+function toPerGame(row: any): any {
+  const g = Math.max(num(row.gamesPlayed), 1);
+  const pg: any = { ...row };
+  for (const k of Object.keys(row)) {
+    if (typeof row[k] === "number" && k !== "gamesPlayed" && k !== "playerRanking") {
+      pg[k] = row[k] / g;
+    }
+  }
+  return pg;
+}
+
 // "E2025" -> "2025-26"
 export function seasonLabel(seasonCode: string): string {
   const y = num(seasonCode.replace(/\D/g, ""), 2025);
@@ -131,12 +145,16 @@ export async function ingestLiveSeason(
   const FEED =
     "https://feeds.incrowdsports.com/provider/euroleague-feeds/v2/competitions/E/seasons/" +
     seasonCode;
-  const mode = `SeasonMode=Single&SeasonCode=${seasonCode}&statisticMode=perGame&limit=500`;
+  const base = `SeasonMode=Single&SeasonCode=${seasonCode}&limit=1000`;
+  const teamMode = `${base}&statisticMode=perGame`;
+  // Players: use the ACCUMULATED set (broader coverage than perGame's
+  // minutes-thresholded ~208) and convert to per-game via toPerGame() below.
+  const playerMode = `${base}&statisticMode=accumulated`;
 
   const [teamTradRaw, teamOppRaw, playerRaw, clubsRaw] = await Promise.all([
-    getJson(`${V3}/teams/traditional?${mode}`),
-    getJson(`${V3}/teams/opponentsTraditional?${mode}`),
-    getJson(`${V3}/players/traditional?${mode}`),
+    getJson(`${V3}/teams/traditional?${teamMode}`),
+    getJson(`${V3}/teams/opponentsTraditional?${teamMode}`),
+    getJson(`${V3}/players/traditional?${playerMode}`),
     getJson(`${FEED}/clubs`),
   ]);
 
@@ -216,13 +234,15 @@ export async function ingestLiveSeason(
   // ---- Players + season stat line (upsert by first+last name) ------------
   let players_ = 0,
     skipped = 0;
-  for (const row of players) {
-    const p = row.player;
+  for (const rawRow of players) {
+    const p = rawRow.player;
     if (!p?.code) {
       skipped++;
       continue;
     }
-    const person = personByCode.get(p.code);
+    const personCode = String(p.code);
+    const row = toPerGame(rawRow); // accumulated totals -> per-game
+    const person = personByCode.get(personCode);
     let { first: firstName, last: lastName } = splitStatsName(p.name);
     if (!lastName && (person?.passportName || person?.passportSurname)) {
       firstName = titleCase(person.passportName || "");
@@ -251,6 +271,7 @@ export async function ingestLiveSeason(
     const min = round1(num(row.minutesPlayed));
 
     const playerData = {
+      personCode,
       position,
       nationality,
       age: num(p.age, 25),
@@ -262,7 +283,7 @@ export async function ingestLiveSeason(
     };
     const statLine = {
       teamSnapshot: teamCode,
-      games: Math.round(num(row.gamesPlayed)),
+      games: Math.round(num(rawRow.gamesPlayed)),
       minutes: min,
       ...line,
       usage: usageRate(row, teamCode ? tradByCode.get(teamCode) : null),
@@ -271,7 +292,10 @@ export async function ingestLiveSeason(
       fpStdev: round1(Math.max(fp, 2) * 0.34),
     };
 
-    const existing = await prisma.player.findFirst({ where: { firstName, lastName } });
+    // Match by stable person code first, then fall back to name.
+    const existing =
+      (await prisma.player.findUnique({ where: { personCode } })) ??
+      (await prisma.player.findFirst({ where: { firstName, lastName } }));
     const playerId = existing
       ? (await prisma.player.update({ where: { id: existing.id }, data: playerData })).id
       : (await prisma.player.create({ data: { firstName, lastName, tags: "", ...playerData } })).id;
@@ -465,10 +489,12 @@ export async function ingestPreseasonRoster(
     }
   }
 
-  // Existing players by "first|last" name (+ whether they have any stat line).
+  // Existing players indexed by stable person code (robust) + name (fallback),
+  // with whether they have any stat line (returning vs unproven).
   const dbPlayers = await prisma.player.findMany({
-    select: { id: true, firstName: true, lastName: true, seasonStats: { take: 1, select: { id: true } } },
+    select: { id: true, personCode: true, firstName: true, lastName: true, seasonStats: { take: 1, select: { id: true } } },
   });
+  const byCode = new Map(dbPlayers.filter((p) => p.personCode).map((p) => [p.personCode as string, p]));
   const byName = new Map(dbPlayers.map((p) => [`${p.firstName.toLowerCase()}|${p.lastName.toLowerCase()}`, p]));
 
   const touchedIds = new Set<string>();
@@ -483,16 +509,19 @@ export async function ingestPreseasonRoster(
       const { first, last } = splitStatsName(rec.person.name || "");
       if (!last) continue;
       const person = rec.person;
+      const personCode = String(person.code);
       const heightCm = num(person.height) || 0;
       const position = refinePosition(person.positionName ?? null, {}, heightCm);
       const nationality = person.country?.name || "—";
-      const matched = byName.get(`${first.toLowerCase()}|${last.toLowerCase()}`);
+      // Match by stable person code first, then fall back to name.
+      const matched = byCode.get(personCode) ?? byName.get(`${first.toLowerCase()}|${last.toLowerCase()}`);
 
       if (matched) {
         const hasStats = matched.seasonStats.length > 0;
         await prisma.player.update({
           where: { id: matched.id },
           data: {
+            personCode, // backfill the code onto legacy rows
             teamId, position, nationality,
             heightCm: heightCm > 0 ? heightCm : undefined,
             status: hasStats ? "signed" : "unproven",
@@ -503,6 +532,7 @@ export async function ingestPreseasonRoster(
       } else {
         const p = await prisma.player.create({
           data: {
+            personCode,
             firstName: first, lastName: last, position, nationality,
             age: num(person.age, 24), heightCm: heightCm > 0 ? heightCm : null,
             teamId, status: "unproven", depthRole: "rotation", fantasyPrice: 5, tags: "unproven",

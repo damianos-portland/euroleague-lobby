@@ -11,10 +11,18 @@ export default async function AdminLotteryPage() {
   const session = await auth();
   if (session?.user?.role !== "admin") redirect("/");
 
-  const rooms = await prisma.draftRoom.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { participants: true } } },
-  });
+  const [rooms, users] = await Promise.all([
+    prisma.draftRoom.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        participants: {
+          orderBy: { teamName: "asc" },
+          select: { id: true, teamName: true, userId: true, draftOrder: true },
+        },
+      },
+    }),
+    prisma.user.findMany({ orderBy: { email: "asc" }, select: { id: true, name: true, email: true } }),
+  ]);
 
   return (
     <>
@@ -29,12 +37,18 @@ export default async function AdminLotteryPage() {
         <section className="space-y-3">
           <h2 className="section-title">Rooms & κληρώσεις</h2>
           <LotteryRoomList
+            users={users.map((u) => ({ id: u.id, name: u.name ?? "", email: u.email }))}
             rooms={rooms.map((r) => ({
               id: r.id,
               name: r.name,
               status: r.status,
               rounds: r.rounds,
-              participants: r._count.participants,
+              participants: r.participants.map((p) => ({
+                id: p.id,
+                teamName: p.teamName,
+                userId: p.userId,
+                draftOrder: p.draftOrder,
+              })),
             }))}
           />
         </section>

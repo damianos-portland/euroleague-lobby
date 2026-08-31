@@ -11,6 +11,7 @@ interface RoomRow {
   name: string;
   status: string;
   rounds: number;
+  mine?: boolean;
   _count: { participants: number; picks: number };
 }
 
@@ -46,6 +47,8 @@ export default function DraftLobbyPage() {
       setCreating(false);
     }
   }
+
+  const mineRooms = rooms.filter((r) => r.mine);
 
   const statusTone: Record<string, string> = {
     lobby: "bg-sky-500/15 text-sky-300",
@@ -89,28 +92,46 @@ export default function DraftLobbyPage() {
         </section>
 
         {/* Existing rooms */}
-        <section className="lg:col-span-2 space-y-3">
-          <h2 className="section-title">Draft Rooms</h2>
-          {rooms.length === 0 && <p className="text-sm text-slate-500">Κανένα room ακόμη — φτιάξε ένα.</p>}
-          {rooms.map((r) => (
-            <Link key={r.id} href={`/draft/${r.id}`} className="card card-pad flex items-center justify-between transition hover:ring-1 hover:ring-brand-500/30">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-white">{r.name}</span>
-                  <span className={`chip ${statusTone[r.status] ?? "bg-white/5 text-slate-300"}`}>{r.status}</span>
-                </div>
-                <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
-                  <span className="inline-flex items-center gap-1"><Users size={12} /> {r._count.participants} ομάδες</span>
-                  <span>{r.rounds} γύροι</span>
-                  <span>{r._count.picks} picks</span>
-                </div>
-              </div>
-              <span className="btn-ghost">Άνοιγμα →</span>
-            </Link>
-          ))}
+        <section className="lg:col-span-2 space-y-5">
+          {mineRooms.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="section-title">Τα rooms μου</h2>
+              {mineRooms.map((r) => (
+                <RoomCard key={r.id} room={r} statusTone={statusTone} />
+              ))}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <h2 className="section-title">{mineRooms.length > 0 ? "Όλα τα draft rooms" : "Draft Rooms"}</h2>
+            {rooms.length === 0 && <p className="text-sm text-slate-500">Κανένα room ακόμη — φτιάξε ένα.</p>}
+            {rooms.map((r) => (
+              <RoomCard key={r.id} room={r} statusTone={statusTone} />
+            ))}
+          </div>
         </section>
       </div>
     </>
+  );
+}
+
+function RoomCard({ room: r, statusTone }: { room: RoomRow; statusTone: Record<string, string> }) {
+  return (
+    <Link href={`/draft/${r.id}`} className="card card-pad flex items-center justify-between transition hover:ring-1 hover:ring-brand-500/30">
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-white">{r.name}</span>
+          <span className={`chip ${statusTone[r.status] ?? "bg-white/5 text-slate-300"}`}>{r.status}</span>
+          {r.mine && <span className="chip bg-brand-500/15 text-brand-300">🏀 δικό σου</span>}
+        </div>
+        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+          <span className="inline-flex items-center gap-1"><Users size={12} /> {r._count.participants} ομάδες</span>
+          <span>{r.rounds} γύροι</span>
+          <span>{r._count.picks} picks</span>
+        </div>
+      </div>
+      <span className="btn-ghost">Άνοιγμα →</span>
+    </Link>
   );
 }
 

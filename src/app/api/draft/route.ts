@@ -1,13 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { auth } from "@/auth";
 
-// List rooms
+// List rooms. Each room is annotated with `mine` = the current user controls a
+// slot in it, so the client can surface "my draft rooms".
 export async function GET() {
+  const session = await auth();
+  const uid = session?.user?.id ?? null;
+
   const rooms = await prisma.draftRoom.findMany({
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { participants: true, picks: true } } },
+    include: {
+      _count: { select: { participants: true, picks: true } },
+      participants: { select: { userId: true } },
+    },
   });
-  return NextResponse.json({ rooms });
+
+  const shaped = rooms.map((r) => ({
+    id: r.id,
+    name: r.name,
+    status: r.status,
+    rounds: r.rounds,
+    _count: r._count,
+    mine: uid ? r.participants.some((p) => p.userId === uid) : false,
+  }));
+  return NextResponse.json({ rooms: shaped, isAdmin: session?.user?.role === "admin" });
 }
 
 // Create a room with a randomised draft order (the "lottery").

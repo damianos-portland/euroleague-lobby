@@ -22,6 +22,8 @@ export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin
 
   const n = room.participants.length;
   const byPick = new Map(room.participants.map((p) => [p.draftOrder, p]));
+  const totalWeight = room.participants.reduce((s, p) => s + Math.max(1, p.weight), 0) || 1;
+  const oddsOf = (w: number) => Math.round((Math.max(1, w) / totalWeight) * 1000) / 10;
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/draft/lottery/${room.id}`, { cache: "no-store" });
@@ -110,8 +112,8 @@ export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin
                 )}
               </span>
               {isFirst && revealed && <Trophy size={15} className="text-brand-400" />}
-              {revealed && n > 2 && (
-                <span className="stat text-[10px] text-slate-500">{p?.weight ?? 1} tix</span>
+              {revealed && n > 2 && p && (
+                <span className="stat text-[10px] text-slate-500">{oddsOf(p.weight)}%</span>
               )}
             </div>
           );

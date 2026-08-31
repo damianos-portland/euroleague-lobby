@@ -11,6 +11,34 @@ import { Position } from "./types";
 // the most tickets). Equal weights → a uniform (pure random) shuffle.
 // Returns the participant indices in pick order: result[0] gets pick #1.
 // ---------------------------------------------------------------------------
+// NBA draft-lottery odds for the 14 lottery teams, as ticket combinations out
+// of 1000 (worst team first). The real NBA distribution: the bottom 3 teams are
+// tied at the top, then a steady taper, steeper at the very end.
+const NBA_14 = [140, 140, 140, 125, 105, 90, 75, 60, 45, 30, 20, 15, 10, 5];
+
+// Produce NBA-style lottery weights for `n` teams (seed 1 = worst = best odds),
+// by resampling the real 14-team odds curve to n points. Preserves the NBA
+// shape whatever the league size. Returned as integer "tickets".
+export function nbaLotteryWeights(n: number): number[] {
+  if (n <= 1) return [1];
+  const src = NBA_14;
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const x = (i * (src.length - 1)) / (n - 1); // map 0..n-1 → 0..13
+    const lo = Math.floor(x);
+    const hi = Math.min(lo + 1, src.length - 1);
+    const frac = x - lo;
+    out.push(Math.max(1, Math.round(src[lo] * (1 - frac) + src[hi] * frac)));
+  }
+  return out;
+}
+
+// Convert weights into #1-pick odds percentages (rounded to 1 decimal).
+export function oddsPercent(weights: number[]): number[] {
+  const total = weights.reduce((s, w) => s + Math.max(1, w), 0) || 1;
+  return weights.map((w) => Math.round((Math.max(1, w) / total) * 1000) / 10);
+}
+
 export function drawLotteryOrder(weights: number[]): number[] {
   const pool = weights.map((w, i) => ({ i, w: Math.max(1, Math.round(w) || 1) }));
   const order: number[] = [];

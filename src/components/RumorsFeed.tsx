@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { ConfidenceBadge } from "@/components/desk";
 
 export interface RumorRow {
@@ -28,10 +29,30 @@ function relTime(iso: string): string {
   return `${Math.round(hrs / 24)}d`;
 }
 
-export function RumorsFeed({ items, teams }: { items: RumorRow[]; teams: string[] }) {
+export function RumorsFeed({ items, teams, isAdmin }: { items: RumorRow[]; teams: string[]; isAdmin?: boolean }) {
+  const router = useRouter();
   const [kind, setKind] = useState<string>("all");
   const [team, setTeam] = useState<string>("all");
   const [page, setPage] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  async function refreshNews() {
+    setRefreshing(true);
+    setNote(null);
+    try {
+      const res = await fetch("/api/admin/fetch-news", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setNote(`+${data?.stored ?? 0} νέα (από ${data?.fetched ?? 0})`);
+        router.refresh();
+      } else {
+        setNote(data?.error ?? "Σφάλμα ανανέωσης.");
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   const filtered = useMemo(
     () =>
@@ -75,14 +96,26 @@ export function RumorsFeed({ items, teams }: { items: RumorRow[]; teams: string[
         <select
           value={team}
           onChange={(e) => changeTeam(e.target.value)}
-          className="input ml-auto font-mono text-xs"
+          className={clsx("input font-mono text-xs", isAdmin ? "" : "ml-auto")}
         >
           <option value="all">ΟΛΕΣ ΟΙ ΟΜΑΔΕΣ</option>
           {teams.map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        {isAdmin && (
+          <button
+            onClick={refreshNews}
+            disabled={refreshing}
+            className="btn-primary ml-auto !px-3 !py-1.5 text-xs"
+            title="Τράβα φρέσκα νέα από τα feeds"
+          >
+            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+            {refreshing ? "Ανανέωση…" : "Φέρε φρέσκα νέα"}
+          </button>
+        )}
       </div>
+      {note && <p className="font-mono text-[11px] text-brand-400">{note}</p>}
 
       <ul className="space-y-2">
         {filtered.length === 0 && (

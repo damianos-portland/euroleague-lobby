@@ -1,10 +1,12 @@
 import { getNewsItems } from "@/lib/queries";
+import { auth } from "@/auth";
 import { PageHeader } from "@/components/PageHeader";
 import { RumorsFeed, RumorRow } from "@/components/RumorsFeed";
 
 export const dynamic = "force-dynamic";
 
 export default async function RumorsPage() {
+  const session = await auth();
   const items = await getNewsItems(200);
   const rows: RumorRow[] = items.map((i) => ({
     id: i.id,
@@ -26,7 +28,7 @@ export default async function RumorsPage() {
         status="● FEED LIVE · ΑΝΑΝΕΩΣΗ ΚΑΘΗΜΕΡΙΝΑ 06:00 UTC"
         subtitle="Μεταγραφικά νέα & φήμες από ελληνικές & αγγλικές πηγές (Eurohoops, TalkBasket) — αυτόματα ταξινομημένα, με confidence και matched παίκτες."
       />
-      <RumorsFeed items={rows} teams={teams} />
+      <RumorsFeed items={rows} teams={teams} isAdmin={session?.user?.role === "admin"} />
     </>
   );
 }

@@ -80,6 +80,52 @@ export function orderIndexForPick(overall: number, numParticipants: number): num
   return round % 2 === 0 ? pos : numParticipants - 1 - pos;
 }
 
+// "Re-lottery" order matrix. Round 1 keeps the lottery result (seats 0..n-1 in
+// pick order). Each later round is re-drawn with weights derived from the
+// PREVIOUS round's order: the team that picked first last round is seeded worst
+// (smallest weight → lowest odds for the next round's #1 pick), and vice-versa.
+// Returns rounds×n where result[r][pos] = the draftOrder-seat picking at `pos`.
+export function chainedRoundOrders(rounds: number, n: number): number[][] {
+  const round1 = Array.from({ length: n }, (_, i) => i); // seat s picks at pos s
+  const orders: number[][] = [round1];
+  for (let r = 1; r < rounds; r++) {
+    const prev = orders[r - 1];
+    const reversed = [...prev].reverse(); // reversed[0] = last picker last round
+    const curve = nbaLotteryWeights(n); // curve[0] = biggest
+    const weights = new Array<number>(n).fill(1);
+    for (let k = 0; k < n; k++) weights[reversed[k]] = curve[k]; // worst→best odds
+    orders.push(drawLotteryOrder(weights));
+  }
+  return orders;
+}
+
+// Parse the stored roundOrders JSON; null/invalid ⇒ null (snake fallback).
+export function parseRoundOrders(raw: string | null | undefined): number[][] | null {
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw);
+    if (Array.isArray(v) && v.every((row) => Array.isArray(row))) return v as number[][];
+  } catch {
+    /* fall through */
+  }
+  return null;
+}
+
+// Which draftOrder-seat is on the clock at `overall`, honoring the round mode.
+// With a roundOrders matrix (re-lottery) it looks up the cached seat; otherwise
+// it falls back to the snake formula.
+export function seatForPick(
+  overall: number,
+  n: number,
+  roundOrders?: number[][] | null
+): number {
+  const round = Math.floor(overall / n);
+  const pos = overall % n;
+  const row = roundOrders?.[round];
+  if (row && row.length === n) return row[pos];
+  return orderIndexForPick(overall, n);
+}
+
 export function roundAndPick(overall: number, numParticipants: number) {
   return {
     round: Math.floor(overall / numParticipants) + 1,

@@ -15,7 +15,9 @@ export async function POST(req: NextRequest) {
   if (denied) return denied;
   const session = await auth();
 
-  const { name, rounds = 10, pickSeconds = 60, mode = "nba", teams } = await req.json().catch(() => ({}));
+  const { name, rounds = 10, pickSeconds = 60, mode = "nba", roundMode: rawRoundMode = "snake", teams } =
+    await req.json().catch(() => ({}));
+  const roundMode = rawRoundMode === "relottery" ? "relottery" : "snake";
   const list: { name: string; weight?: number }[] = Array.isArray(teams) ? teams : [];
   let clean = list
     .map((t) => ({ name: String(t?.name ?? "").trim(), weight: Math.max(1, Math.round(Number(t?.weight)) || 1) }))
@@ -40,6 +42,7 @@ export async function POST(req: NextRequest) {
       status: "lottery",
       rounds,
       pickSeconds,
+      roundMode,
       lotteryRevealed: 0,
       participants: {
         create: clean.map((t, i) => ({

@@ -288,33 +288,33 @@ export function LotteryDrum({
         style={{ width: "100%", height: "auto", aspectRatio: `${W} / ${H}` }}
         className="block"
       />
-      {/* Result chamber */}
-      <div
-        key={flash}
-        className="mx-auto -mt-2 w-full max-w-[300px] rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center shadow-lg"
-        style={latest ? { boxShadow: `0 0 24px -6px ${latest.color}66`, borderColor: `${latest.color}55` } : undefined}
-      >
-        {latest ? (
-          <div className="flex items-center justify-center gap-3">
-            <span
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-black text-slate-950"
-              style={{ background: `radial-gradient(circle at 32% 28%, #fff9, ${latest.color})` }}
-            >
-              {latest.pick}
-            </span>
-            <div className="text-left">
-              <div className="font-mono text-[10px] uppercase tracking-widest" style={{ color: latest.color }}>
-                Pick #{latest.pick}
+      {/* Result chamber — only while drawing or after a pick lands */}
+      {(latest || spinning) && (
+        <div
+          key={flash}
+          className="mx-auto -mt-2 w-full max-w-[300px] rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center shadow-lg"
+          style={latest ? { boxShadow: `0 0 24px -6px ${latest.color}66`, borderColor: `${latest.color}55` } : undefined}
+        >
+          {latest ? (
+            <div className="flex items-center justify-center gap-3">
+              <span
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-black text-slate-950"
+                style={{ background: `radial-gradient(circle at 32% 28%, #fff9, ${latest.color})` }}
+              >
+                {latest.pick}
+              </span>
+              <div className="text-left">
+                <div className="font-mono text-[10px] uppercase tracking-widest" style={{ color: latest.color }}>
+                  Pick #{latest.pick}
+                </div>
+                <div className="truncate text-base font-extrabold text-white">{latest.name}</div>
               </div>
-              <div className="truncate text-base font-extrabold text-white">{latest.name}</div>
             </div>
-          </div>
-        ) : (
-          <div className="py-1 font-mono text-xs uppercase tracking-widest text-slate-500">
-            {spinning ? "…κλήρωση…" : "Θάλαμος κενός"}
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="py-1 font-mono text-xs uppercase tracking-widest text-slate-500">…κλήρωση…</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

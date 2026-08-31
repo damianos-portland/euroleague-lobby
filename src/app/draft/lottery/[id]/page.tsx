@@ -17,6 +17,9 @@ export default async function LotteryPage({ params }: { params: { id: string } }
     id: room.id,
     name: room.name,
     status: room.status,
+    rounds: room.rounds,
+    roundMode: room.roundMode,
+    roundOrders: room.roundOrders,
     lotteryRevealed: room.lotteryRevealed,
     drawn: room.participants.every((p) => p.draftOrder >= 0),
     participants: room.participants.map((p) => ({

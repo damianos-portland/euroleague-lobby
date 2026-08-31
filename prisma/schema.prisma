@@ -330,6 +330,16 @@ model DraftRoom {
   // upward). 0 = drawn but hidden; == #participants → fully revealed → ready.
   lotteryRevealed Int @default(0)
 
+  // How picks beyond round 1 are ordered:
+  //  "snake"     → classic serpentine (round 2 reverses round 1, etc.)
+  //  "relottery" → each round is re-drawn with weights derived from the
+  //                previous round's order (last round's #1 pick gets the worst
+  //                odds next round). Order matrix cached in roundOrders.
+  roundMode   String  @default("snake")
+  // JSON number[][] — roundOrders[r][pos] = the draftOrder-seat picking at
+  // position `pos` in round r (relottery only; null ⇒ derive via snake).
+  roundOrders String?
+
   participants DraftParticipant[]
   picks        DraftPick[]
   queueItems   DraftQueueItem[]

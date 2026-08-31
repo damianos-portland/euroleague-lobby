@@ -7,7 +7,8 @@ import { prisma } from "./db";
 import { Position } from "./types";
 import {
   DraftablePlayer,
-  orderIndexForPick,
+  seatForPick,
+  parseRoundOrders,
   roundAndPick,
   totalPicks,
   requiredPositionsRemaining,
@@ -68,7 +69,8 @@ export async function loadDraftState(roomId: string) {
     picksByParticipant.get(pick.participantId)?.push(toDraftable(pick.player));
   }
 
-  const onTheClockOrder = complete ? -1 : orderIndexForPick(room.currentPickIndex, n);
+  const roundOrders = room.roundMode === "relottery" ? parseRoundOrders(room.roundOrders) : null;
+  const onTheClockOrder = complete ? -1 : seatForPick(room.currentPickIndex, n, roundOrders);
   const onTheClock = room.participants.find((p) => p.draftOrder === onTheClockOrder) ?? null;
   const { round, pickInRound } = roundAndPick(room.currentPickIndex, n);
 
@@ -135,7 +137,8 @@ export async function makePick(roomId: string, playerId: string, opts: { auto?: 
 
   if (room.picks.some((p) => p.playerId === playerId)) throw new Error("Player already drafted");
 
-  const orderIdx = orderIndexForPick(room.currentPickIndex, n);
+  const roundOrders = room.roundMode === "relottery" ? parseRoundOrders(room.roundOrders) : null;
+  const orderIdx = seatForPick(room.currentPickIndex, n, roundOrders);
   const participant = room.participants.find((p) => p.draftOrder === orderIdx);
   if (!participant) throw new Error("No participant on the clock");
 

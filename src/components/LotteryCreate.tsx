@@ -7,6 +7,7 @@ import { Dice5 } from "lucide-react";
 import { nbaLotteryWeights, oddsPercent } from "@/lib/draft";
 
 type Mode = "nba" | "equal" | "manual";
+type RoundMode = "snake" | "relottery";
 
 // Parse "TeamName" or "TeamName : weight" per line into {name, weight}.
 function parseTeams(text: string) {
@@ -27,6 +28,7 @@ export function LotteryCreate() {
   const [rounds, setRounds] = useState(10);
   const [pickSeconds, setPickSeconds] = useState(60);
   const [mode, setMode] = useState<Mode>("nba");
+  const [roundMode, setRoundMode] = useState<RoundMode>("snake");
   const [teamsText, setTeamsText] = useState(
     Array.from({ length: 12 }, (_, i) => `Team ${i + 1}`).join("\n")
   );
@@ -52,7 +54,7 @@ export function LotteryCreate() {
       const res = await fetch("/api/draft/lottery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, rounds, pickSeconds, mode, teams }),
+        body: JSON.stringify({ name, rounds, pickSeconds, mode, roundMode, teams }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -69,6 +71,11 @@ export function LotteryCreate() {
     { key: "nba", label: "🏀 NBA-style" },
     { key: "equal", label: "🎲 Ίσες" },
     { key: "manual", label: "⚖️ Χειροκίνητα" },
+  ];
+
+  const ROUND_MODES: { key: RoundMode; label: string }[] = [
+    { key: "snake", label: "🐍 Φιδάκι" },
+    { key: "relottery", label: "🔁 Κλήρωση ανά γύρο" },
   ];
 
   return (
@@ -115,6 +122,30 @@ export function LotteryCreate() {
               : mode === "equal"
               ? "Όλες οι ομάδες ίδιες πιθανότητες."
               : "Χειροκίνητα βάρη: γράψε «Όνομα : βάρος» ανά γραμμή."}
+          </p>
+        </div>
+
+        <div>
+          <span className="mb-1 block text-[11px] text-slate-400">Σειρά επόμενων γύρων (13+)</span>
+          <div className="flex gap-2">
+            {ROUND_MODES.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                onClick={() => setRoundMode(m.key)}
+                className={clsx(
+                  "btn !px-3 !py-1.5 text-xs",
+                  roundMode === m.key ? "bg-brand-500/20 text-brand-400 ring-1 ring-brand-500/40" : "btn-ghost"
+                )}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[11px] text-slate-500">
+            {roundMode === "snake"
+              ? "Φιδάκι: ο 2ος γύρος αντιστρέφει τον 1ο (#12 διαλέγει πρώτος), ο 3ος ίδιος με τον 1ο, κ.ο.κ."
+              : "Κλήρωση ανά γύρο: κάθε γύρος ξανακληρώνεται με βάρη από τον προηγούμενο — όποιος πήρε το #1 τον προηγούμενο γύρο έχει τη χαμηλότερη πιθανότητα για το επόμενο #1."}
           </p>
         </div>
 

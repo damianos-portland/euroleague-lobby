@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
-import { drawLotteryOrder } from "@/lib/draft";
+import { drawLotteryOrder, chainedRoundOrders } from "@/lib/draft";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +23,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       id: room.id,
       name: room.name,
       status: room.status,
+      rounds: room.rounds,
+      roundMode: room.roundMode,
+      roundOrders: room.roundOrders,
       lotteryRevealed: room.lotteryRevealed,
       drawn: room.participants.every((p) => p.draftOrder >= 0),
       participants: room.participants.map((p) => ({
@@ -54,6 +57,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Weighted draw → assign each participant its 0-based pick position.
     const weights = room.participants.map((p) => p.weight);
     const order = drawLotteryOrder(weights); // order[0] = participant idx that picks #1
+    // Re-lottery mode: pre-draw every round's order now (chained off round 1).
+    const roundOrders =
+      room.roundMode === "relottery"
+        ? JSON.stringify(chainedRoundOrders(room.rounds, n))
+        : null;
     await prisma.$transaction([
       ...order.map((partIdx, pickPos) =>
         prisma.draftParticipant.update({
@@ -61,7 +69,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           data: { draftOrder: pickPos },
         })
       ),
-      prisma.draftRoom.update({ where: { id: room.id }, data: { lotteryRevealed: 0, status: "lottery" } }),
+      prisma.draftRoom.update({
+        where: { id: room.id },
+        data: { lotteryRevealed: 0, status: "lottery", roundOrders },
+      }),
     ]);
     return NextResponse.json({ ok: true });
   }
@@ -75,7 +86,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (action === "reset") {
     await prisma.$transaction([
       prisma.draftParticipant.updateMany({ where: { roomId: room.id }, data: { draftOrder: -1 } }),
-      prisma.draftRoom.update({ where: { id: room.id }, data: { lotteryRevealed: 0, status: "lottery" } }),
+      prisma.draftRoom.update({
+        where: { id: room.id },
+        data: { lotteryRevealed: 0, status: "lottery", roundOrders: null },
+      }),
     ]);
     return NextResponse.json({ ok: true });
   }

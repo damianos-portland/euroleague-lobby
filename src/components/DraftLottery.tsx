@@ -5,12 +5,16 @@ import Link from "next/link";
 import clsx from "clsx";
 import { Dice5, Eye, RotateCcw, Trophy, Sparkles } from "lucide-react";
 import { LotteryDrum, DrumTeam, DrumReveal } from "@/components/LotteryDrum";
+import { seatForPick, parseRoundOrders } from "@/lib/draft";
 
 interface Participant { id: string; teamName: string; weight: number; draftOrder: number }
 interface RoomState {
   id: string;
   name: string;
   status: string;
+  rounds?: number;
+  roundMode?: string;
+  roundOrders?: string | null;
   lotteryRevealed: number;
   drawn: boolean;
   participants: Participant[];
@@ -56,6 +60,12 @@ export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin
     const p = byPick.get(pos);
     if (p) latest = { id: p.id, name: p.teamName, pick: pos + 1, color: colorOf.get(p.id)! };
   }
+
+  // Full multi-round board (shown once the order is locked in).
+  const rounds = room.rounds ?? 1;
+  const relottery = room.roundMode === "relottery";
+  const roundMatrix = relottery ? parseRoundOrders(room.roundOrders ?? null) : null;
+  const boardTeamAt = (round: number, pos: number) => byPick.get(seatForPick(round * n + pos, n, roundMatrix));
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/draft/lottery/${room.id}`, { cache: "no-store" });
@@ -172,6 +182,62 @@ export function DraftLottery({ initial, isAdmin }: { initial: RoomState; isAdmin
           </div>
         </div>
       </div>
+
+      {/* Full draft board — every round's order, once the lottery is locked */}
+      {fullyRevealed && rounds > 1 && (
+        <div className="card card-pad">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="section-title">Πλήρες board · {rounds} γύροι</h2>
+            <span className="chip bg-white/5 text-slate-300">
+              {relottery ? "🔁 Κλήρωση ανά γύρο" : "🐍 Φιδάκι"}
+            </span>
+          </div>
+          <p className="mb-3 text-[11px] text-slate-500">
+            {relottery
+              ? "Κάθε γύρος ξανακληρώθηκε με βάρη από τον προηγούμενο — όποιος πήρε νωρίς σειρά, πέφτει στον επόμενο."
+              : "Φιδάκι: οι μονοί γύροι ακολουθούν τη σειρά της κλήρωσης, οι ζυγοί την αντιστρέφουν."}
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full border-separate border-spacing-1 text-xs">
+              <thead>
+                <tr>
+                  <th className="sticky left-0 z-10 bg-[#0f1424] px-1.5 py-1 text-left font-mono text-[10px] text-slate-500">
+                    PICK
+                  </th>
+                  {Array.from({ length: rounds }, (_, r) => (
+                    <th key={r} className="px-2 py-1 text-center font-mono text-[10px] text-slate-400">
+                      R{r + 1}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: n }, (_, pos) => (
+                  <tr key={pos}>
+                    <td className="sticky left-0 z-10 bg-[#0f1424] px-1.5 py-1 font-mono text-[10px] text-slate-500">
+                      {pos + 1}
+                    </td>
+                    {Array.from({ length: rounds }, (_, r) => {
+                      const p = boardTeamAt(r, pos);
+                      const overall = r * n + pos + 1;
+                      const c = p ? colorOf.get(p.id)! : "#334155";
+                      return (
+                        <td key={r} className="min-w-[92px] rounded-md bg-white/[0.03] px-2 py-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: c }} />
+                            <span className="truncate text-[11px] text-slate-200">{p?.teamName ?? "—"}</span>
+                            <span className="stat ml-auto shrink-0 text-[9px] text-slate-600">{overall}</span>
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Admin controls */}
       {isAdmin && !fullyRevealed && (

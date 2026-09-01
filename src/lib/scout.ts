@@ -11,7 +11,9 @@
 
 import type { PlayerDTO } from "./queries";
 
-export type IntentKey = "gems" | "ceiling" | "value" | "safe" | "differential";
+const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+
+export type IntentKey = "faststart" | "gems" | "ceiling" | "value" | "safe" | "differential";
 
 export interface Intent {
   key: IntentKey;
@@ -20,12 +22,39 @@ export interface Intent {
 }
 
 export const INTENTS: Intent[] = [
-  { key: "gems", label: "💎 Φθηνά διαμάντια", hint: "Φθηνοί παίκτες με upside να ανέβει η αξία τους — buy-low." },
+  { key: "faststart", label: "🔥 Δυνατή εκκίνηση", hint: "Offseason value: αποδεδειγμένοι παίκτες με σίγουρο ρόλο από την 1η αγωνιστική, που κοστίζουν λίγο — η τιμή δεν τους έχει προλάβει." },
+  { key: "gems", label: "💎 Φθηνά διαμάντια", hint: "Φθηνοί παίκτες με upside να ανέβει η αξία τους — buy-low (πιο μακροπρόθεσμο)." },
   { key: "ceiling", label: "🚀 Καθαρά FFP", hint: "Ό,τι κι αν κοστίζει — μέγιστη προβλεπόμενη παραγωγή." },
   { key: "value", label: "⚖️ Value / credit", hint: "Καλύτερη απόδοση ανά credit (points per credit)." },
   { key: "safe", label: "🛡️ Σίγουρο flooring", hint: "Σταθεροί, με λεπτά & χαμηλό ρίσκο τραυματισμού." },
   { key: "differential", label: "🎯 Differential", hint: "Χαμηλό ownership αλλά καλή αξία — κρυφά χαρτιά." },
 ];
+
+// Eligibility gate for "fast start": will this player credibly produce from
+// game 1? Must be proven (real last-season sample), in a secure role, with real
+// minutes. Kept as a GATE (not a multiplier) so it doesn't distort the value
+// ranking toward expensive max-minute studs.
+export function fastStartEligible(p: PlayerDTO): boolean {
+  const j = p.proj;
+  if (!j) return false;
+  if (p.status === "unproven") return false; // no track record → slow ramp
+  if (!p.last || p.last.games < 10) return false; // too small a sample
+  if (p.depthRole !== "starter" && p.depthRole !== "rotation") return false;
+  if (j.projMinutes < 18) return false; // has a real day-1 role
+  return j.projFantasyPoints >= 10; // production floor — must actually contribute
+}
+
+// Expected early per-game output, trusting proven recent form over projection,
+// lightly weighted by sample size. No role/minutes multiplier here — those are
+// the eligibility gate above.
+export function fastStartReadyFP(p: PlayerDTO): number {
+  const j = p.proj;
+  if (!j) return 0;
+  const last = p.last;
+  const reliability = last ? clamp(last.games / 22, 0.5, 1) : 0.4;
+  const base = last ? last.fantasyPoints * 0.6 + j.projFantasyPoints * 0.4 : j.projFantasyPoints * 0.5;
+  return base * reliability;
+}
 
 // Factors we WANT but can't compute until the data phase lands.
 export const MATCHUP_FACTORS = [
@@ -42,6 +71,17 @@ export function fitScore(p: PlayerDTO, intent: IntentKey): number {
   const j = p.proj;
   if (!j) return NEG;
   switch (intent) {
+    case "faststart": {
+      // Among eligible early producers (proven, secure role, ≥10 proj FP), reward
+      // production but with a super-linear price penalty (price^1.3) so genuinely
+      // CHEAP contributors rise over expensive studs — the offseason bargains.
+      // Fantasy pricing here is ~flat on FP/credit, so plain value wouldn't
+      // separate cheap from pricey; the exponent is the explicit "cheap matters".
+      if (!fastStartEligible(p)) return NEG;
+      const consistency = 0.9 + 0.2 * (j.consistencyScore / 100);
+      const avail = clamp(1 - j.injuryRisk / 300, 0.85, 1);
+      return (fastStartReadyFP(p) / Math.pow(Math.max(p.fantasyPrice, 1), 1.3)) * consistency * avail;
+    }
     case "gems":
       // cheap + high upside + value, bonus for an active buy signal
       if (p.fantasyPrice > 8) return NEG;
@@ -69,6 +109,11 @@ export function intentReason(p: PlayerDTO, intent: IntentKey): string {
   const j = p.proj;
   if (!j) return "";
   switch (intent) {
+    case "faststart": {
+      const role = p.depthRole === "starter" ? "starter" : p.depthRole === "rotation" ? "rotation" : "bench";
+      const proven = p.last ? `${p.last.fantasyPoints.toFixed(1)} FP πέρσι` : "unproven";
+      return `${proven} · ${role} · ${p.fantasyPrice.toFixed(1)}cr`;
+    }
     case "gems":
       return `${p.fantasyPrice.toFixed(1)}cr · upside ${j.upsideScore}${j.signal === "buy" ? " · BUY" : ""}`;
     case "ceiling":

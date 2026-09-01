@@ -36,7 +36,7 @@ export function ScoutView({
   const [pos, setPos] = useState("ALL");
   const [basis, setBasis] = useState<Basis>("proj");
   const [minFp, setMinFp] = useState(0);
-  const [intent, setIntent] = useState<IntentKey>("gems");
+  const [intent, setIntent] = useState<IntentKey>("faststart");
   const [maxPrice, setMaxPrice] = useState(99);
 
   // Only players with a projection are chartable/rankable.

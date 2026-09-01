@@ -30,12 +30,14 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   const [q, setQ] = useState("");
   const [posFilter, setPosFilter] = useState<string>("ALL");
   const [notes, setNotes] = useState("");
+  const [viewer, setViewer] = useState<{ id: string; role: string } | null>(null);
   const actingRef = useRef(false);
 
   const refresh = useCallbackRef(async () => {
     const res = await fetch(`/api/draft/${roomId}`);
     const data = await res.json();
     if (data.state) setState(data.state);
+    if (data.viewer !== undefined) setViewer(data.viewer);
   });
 
   async function act(body: Record<string, any>) {
@@ -62,13 +64,22 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
     return () => clearInterval(id);
   }, [refresh]);
 
-  const you = useMemo(
-    () => state?.participants.find((p: any) => !p.isAutopick) ?? state?.participants[0] ?? null,
-    [state]
-  );
+  const isAdmin = viewer?.role === "admin";
   const onClockId = state?.onTheClock?.id;
   const onClockParticipant = state?.participants.find((p: any) => p.id === onClockId) ?? null;
-  const yourTurn = onClockId && you && onClockId === you.id;
+
+  // The viewer's own team slot (matched by their user id). Admins with no slot
+  // fall back to the team on the clock so they can draft on its behalf.
+  const myParticipant = useMemo(
+    () => (viewer ? state?.participants.find((p: any) => p.userId === viewer.id) ?? null : null),
+    [state, viewer]
+  );
+  const you = myParticipant ?? (isAdmin ? onClockParticipant : null) ?? state?.participants[0] ?? null;
+
+  // It's genuinely your turn only when *your own* slot is on the clock.
+  const yourTurn = !!(onClockId && myParticipant && onClockId === myParticipant.id);
+  // Who may submit the pick: the on-clock user, or any admin.
+  const canPick = isAdmin || yourTurn;
 
   // CPU auto-advance: when a bot is on the clock, pick automatically.
   useEffect(() => {
@@ -136,14 +147,16 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
           </div>
         )}
 
-        {/* Admin controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          {room.status === "lobby" && <button className="btn-primary" onClick={() => act({ action: "start" })}><Play size={15} /> Start</button>}
-          {drafting && <button className="btn-ghost" onClick={() => act({ action: "pause" })}><Pause size={15} /> Pause</button>}
-          {room.status === "paused" && <button className="btn-primary" onClick={() => act({ action: "resume" })}><Play size={15} /> Resume</button>}
-          {!state.complete && drafting && <button className="btn-ghost" onClick={() => act({ action: "autopick" })}><Zap size={15} /> Auto-pick</button>}
-          <button className="btn-ghost" onClick={() => act({ action: "undo" })} title="Admin undo"><RotateCcw size={15} /> Undo</button>
-        </div>
+        {/* Host controls — admin only */}
+        {isAdmin && (
+          <div className="flex flex-wrap items-center gap-2">
+            {room.status === "lobby" && <button className="btn-primary" onClick={() => act({ action: "start" })}><Play size={15} /> Start</button>}
+            {drafting && <button className="btn-ghost" onClick={() => act({ action: "pause" })}><Pause size={15} /> Pause</button>}
+            {room.status === "paused" && <button className="btn-primary" onClick={() => act({ action: "resume" })}><Play size={15} /> Resume</button>}
+            {!state.complete && drafting && <button className="btn-ghost" onClick={() => act({ action: "autopick" })}><Zap size={15} /> Auto-pick</button>}
+            <button className="btn-ghost" onClick={() => act({ action: "undo" })} title="Admin undo"><RotateCcw size={15} /> Undo</button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
@@ -207,7 +220,16 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
                           </button>
                           <button
                             className="btn-primary !px-2.5 !py-1 text-xs disabled:opacity-40"
-                            disabled={!drafting || !yourTurn || busy}
+                            disabled={!drafting || !canPick || busy}
+                            title={
+                              !drafting
+                                ? "Το draft δεν είναι σε εξέλιξη"
+                                : canPick
+                                ? isAdmin && !yourTurn
+                                  ? `Draft για ${state.onTheClock?.teamName ?? "on-clock"} (admin)`
+                                  : "Κάνε το pick σου"
+                                : "Δεν είναι η σειρά σου"
+                            }
                             onClick={() => act({ action: "pick", playerId: p.id })}
                           >
                             Draft

@@ -122,6 +122,21 @@ export async function loadDraftState(roomId: string) {
 
 export type DraftState = NonNullable<Awaited<ReturnType<typeof loadDraftState>>>;
 
+// The participant currently on the clock (with userId/isAutopick), or null when
+// the room is missing or the draft is complete. Used for pick authorization.
+export async function onClockParticipant(roomId: string) {
+  const room = await prisma.draftRoom.findUnique({
+    where: { id: roomId },
+    include: { participants: true },
+  });
+  if (!room) return null;
+  const n = room.participants.length;
+  if (room.currentPickIndex >= totalPicks(n, room.rounds)) return null;
+  const roundOrders = room.roundMode === "relottery" ? parseRoundOrders(room.roundOrders) : null;
+  const seat = seatForPick(room.currentPickIndex, n, roundOrders);
+  return room.participants.find((p) => p.draftOrder === seat) ?? null;
+}
+
 // Make a pick for the participant currently on the clock (or a specified one).
 export async function makePick(roomId: string, playerId: string, opts: { auto?: boolean } = {}) {
   const room = await prisma.draftRoom.findUnique({

@@ -28,11 +28,18 @@ export function PlayerExplorer({
   teams: { id: string; shortName: string; name: string }[];
   mode?: Mode;
 }) {
+  // Upper bound for the price filter = the priciest player (rounded up to 0.5),
+  // so nobody is hidden by a hard-coded cap.
+  const priceCeiling = Math.max(
+    1,
+    Math.ceil(players.reduce((m, p) => Math.max(m, p.fantasyPrice ?? 0), 0) * 2) / 2
+  );
+
   const [q, setQ] = useState("");
   const [team, setTeam] = useState("ALL");
   const [pos, setPos] = useState("ALL");
   const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(12);
+  const [maxPrice, setMaxPrice] = useState(priceCeiling);
   const [rec, setRec] = useState("ALL");
   const [sortKey, setSortKey] = useState(
     mode === "stats" ? "fp" : mode === "value" ? "valueScore" : "projFp"
@@ -145,8 +152,8 @@ export function PlayerExplorer({
         <div className="flex flex-col gap-1">
           <label className="text-[11px] text-slate-400">Τιμή: {minPrice.toFixed(1)} – {maxPrice.toFixed(1)}</label>
           <div className="flex items-center gap-2">
-            <input type="range" min={0} max={12} step={0.5} value={minPrice} onChange={(e) => setMinPrice(Math.min(+e.target.value, maxPrice))} className="accent-brand-500" />
-            <input type="range" min={0} max={12} step={0.5} value={maxPrice} onChange={(e) => setMaxPrice(Math.max(+e.target.value, minPrice))} className="accent-brand-500" />
+            <input type="range" min={0} max={priceCeiling} step={0.5} value={minPrice} onChange={(e) => setMinPrice(Math.min(+e.target.value, maxPrice))} className="accent-brand-500" />
+            <input type="range" min={0} max={priceCeiling} step={0.5} value={maxPrice} onChange={(e) => setMaxPrice(Math.max(+e.target.value, minPrice))} className="accent-brand-500" />
           </div>
         </div>
         <div className="ml-auto text-xs text-slate-400">{filtered.length} παίκτες</div>

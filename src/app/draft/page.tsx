@@ -20,7 +20,6 @@ export default function DraftLobbyPage() {
   const [rooms, setRooms] = useState<RoomRow[]>([]);
   const [name, setName] = useState("My EuroLeague League");
   const [rounds, setRounds] = useState(10);
-  const [pickSeconds, setPickSeconds] = useState(60);
   const [teamsText, setTeamsText] = useState("You, CPU Bartzokas, CPU Ataman, CPU Obradović, CPU Messina, CPU Spanoulis");
   const [creating, setCreating] = useState(false);
 
@@ -39,7 +38,7 @@ export default function DraftLobbyPage() {
       const res = await fetch("/api/draft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, rounds, pickSeconds, teamNames }),
+        body: JSON.stringify({ name, rounds, teamNames }),
       });
       const data = await res.json();
       if (data.roomId) router.push(`/draft/${data.roomId}`);
@@ -61,7 +60,7 @@ export default function DraftLobbyPage() {
     <>
       <PageHeader
         title="Draft Mode 2026"
-        subtitle="Στήσε snake draft room, κλήρωσε σειρά επιλογής, βάλε timer ανά pick και τρέξε live draft με auto-pick, queue, best-available & post-draft grades."
+        subtitle="Στήσε snake draft room, κλήρωσε σειρά επιλογής και τρέξε live draft με auto-pick, queue, best-available & post-draft grades."
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -74,14 +73,9 @@ export default function DraftLobbyPage() {
             <Field label="Όνομα league">
               <input className="input w-full" value={name} onChange={(e) => setName(e.target.value)} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Γύροι (rounds)">
-                <input type="number" min={3} max={15} className="input w-full" value={rounds} onChange={(e) => setRounds(+e.target.value)} />
-              </Field>
-              <Field label="Timer / pick (s)">
-                <input type="number" min={15} max={180} className="input w-full" value={pickSeconds} onChange={(e) => setPickSeconds(+e.target.value)} />
-              </Field>
-            </div>
+            <Field label="Γύροι (rounds)">
+              <input type="number" min={3} max={15} className="input w-full" value={rounds} onChange={(e) => setRounds(+e.target.value)} />
+            </Field>
             <Field label="Ομάδες / users (χωρισμένα με κόμμα — η 1η είσαι εσύ)">
               <textarea className="input min-h-[80px] w-full" value={teamsText} onChange={(e) => setTeamsText(e.target.value)} />
             </Field>

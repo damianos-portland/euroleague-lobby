@@ -9,7 +9,7 @@ import { PosBadge, RecBadge } from "@/components/ui";
 import { advise, AdviceKind, DraftablePlayer, gradeRoster } from "@/lib/draft";
 import { POSITIONS, Position } from "@/lib/types";
 import {
-  Play, Pause, RotateCcw, Zap, Clock, ListPlus, ArrowLeft, Search, Trophy,
+  Play, Pause, RotateCcw, Zap, ListPlus, ArrowLeft, Search, Trophy,
 } from "lucide-react";
 
 type State = any; // shape from loadDraftState
@@ -30,7 +30,6 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   const [q, setQ] = useState("");
   const [posFilter, setPosFilter] = useState<string>("ALL");
   const [notes, setNotes] = useState("");
-  const [secondsLeft, setSecondsLeft] = useState(60);
   const actingRef = useRef(false);
 
   const refresh = useCallbackRef(async () => {
@@ -71,11 +70,6 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   const onClockParticipant = state?.participants.find((p: any) => p.id === onClockId) ?? null;
   const yourTurn = onClockId && you && onClockId === you.id;
 
-  // Reset timer when the pick changes.
-  useEffect(() => {
-    if (state?.room) setSecondsLeft(state.room.pickSeconds);
-  }, [state?.room?.currentPickIndex, state?.room?.pickSeconds, state?.room]);
-
   // CPU auto-advance: when a bot is on the clock, pick automatically.
   useEffect(() => {
     if (!state || state.complete || state.room.status !== "drafting") return;
@@ -89,17 +83,6 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
       return () => { clearTimeout(t); actingRef.current = false; };
     }
   }, [state, onClockParticipant]);
-
-  // Timer countdown for the human pick; auto-pick when it expires.
-  useEffect(() => {
-    if (!state || state.complete || state.room.status !== "drafting" || !yourTurn) return;
-    if (secondsLeft <= 0) {
-      act({ action: "autopick" });
-      return;
-    }
-    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [secondsLeft, yourTurn, state]);
 
   const available: DraftablePlayer[] = state?.available ?? [];
   const yourPositions: Position[] = (you?.roster ?? []).map((r: DraftablePlayer) => r.position);
@@ -135,22 +118,17 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
             <span className="chip bg-white/5 capitalize text-slate-300">{room.status}</span>
           </div>
           <div className="mt-1 text-xs text-slate-400">
-            Snake draft · {state.participants.length} ομάδες · {room.rounds} γύροι · {room.pickSeconds}s/pick
+            Snake draft · {state.participants.length} ομάδες · {room.rounds} γύροι
           </div>
         </div>
 
-        {/* On the clock + timer */}
+        {/* On the clock */}
         {!state.complete ? (
           <div className="flex items-center gap-4">
             <div className={clsx("rounded-2xl border px-4 py-2", yourTurn ? "border-brand-500/40 bg-brand-500/10 animate-pulseRing" : "border-white/10 bg-white/[0.03]")}>
               <div className="text-[10px] uppercase tracking-wider text-slate-400">On the clock — R{state.round}.{state.pickInRound}</div>
               <div className="font-bold text-white">{state.onTheClock?.teamName ?? "—"} {yourTurn && <span className="text-brand-400">(εσύ)</span>}</div>
             </div>
-            {drafting && (
-              <div className={clsx("flex items-center gap-1.5 rounded-2xl px-4 py-2 text-2xl font-black tabular-nums", secondsLeft <= 10 ? "text-rose-400" : "text-white")}>
-                <Clock size={20} /> {secondsLeft}
-              </div>
-            )}
           </div>
         ) : (
           <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 font-bold text-emerald-300">

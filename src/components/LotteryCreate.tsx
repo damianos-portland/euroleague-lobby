@@ -26,7 +26,6 @@ export function LotteryCreate() {
   const router = useRouter();
   const [name, setName] = useState("EuroLeague Fantasy League 2026-27");
   const [rounds, setRounds] = useState(10);
-  const [pickSeconds, setPickSeconds] = useState(60);
   const [mode, setMode] = useState<Mode>("nba");
   const [roundMode, setRoundMode] = useState<RoundMode>("snake");
   const [teamsText, setTeamsText] = useState(
@@ -54,7 +53,7 @@ export function LotteryCreate() {
       const res = await fetch("/api/draft/lottery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, rounds, pickSeconds, mode, roundMode, teams }),
+        body: JSON.stringify({ name, rounds, mode, roundMode, teams }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -88,16 +87,10 @@ export function LotteryCreate() {
           <span className="mb-1 block text-[11px] text-slate-400">Όνομα league</span>
           <input className="input w-full" value={name} onChange={(e) => setName(e.target.value)} />
         </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="mb-1 block text-[11px] text-slate-400">Γύροι</span>
-            <input type="number" min={3} max={15} className="input w-full" value={rounds} onChange={(e) => setRounds(+e.target.value)} />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-[11px] text-slate-400">Timer / pick (s)</span>
-            <input type="number" min={15} max={180} className="input w-full" value={pickSeconds} onChange={(e) => setPickSeconds(+e.target.value)} />
-          </label>
-        </div>
+        <label className="block">
+          <span className="mb-1 block text-[11px] text-slate-400">Γύροι</span>
+          <input type="number" min={3} max={15} className="input w-full" value={rounds} onChange={(e) => setRounds(+e.target.value)} />
+        </label>
 
         <div>
           <span className="mb-1 block text-[11px] text-slate-400">Τύπος κλήρωσης</span>

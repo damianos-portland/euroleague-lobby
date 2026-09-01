@@ -20,6 +20,7 @@ import {
   Wallet,
   LogOut,
   Dice5,
+  Crosshair,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -37,6 +38,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { href: "/", label: "Lobby", icon: LayoutDashboard },
       { href: "/projections", label: "Projections", icon: LineChart },
       { href: "/value", label: "Value Engine", icon: Gauge },
+      { href: "/scout", label: "Scout", icon: Crosshair },
     ],
   },
   {

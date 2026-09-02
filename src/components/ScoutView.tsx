@@ -289,12 +289,19 @@ function RecsTab({
   maxPrice: number;
   priceCeiling: number;
 }) {
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 25;
   const filtered = useMemo(
     () => base.filter((p) => p.fantasyPrice <= (maxPrice >= priceCeiling ? Infinity : maxPrice)),
     [base, maxPrice, priceCeiling]
   );
-  const ranked = useMemo(() => rankByIntent(filtered, intent).slice(0, 40), [filtered, intent]);
+  const allRanked = useMemo(() => rankByIntent(filtered, intent), [filtered, intent]);
   const active = INTENTS.find((i) => i.key === intent)!;
+
+  useEffect(() => { setPage(0); }, [intent, filtered]); // reset paging on intent/filter change
+  const pageCount = Math.max(1, Math.ceil(allRanked.length / PAGE_SIZE));
+  const current = Math.min(page, pageCount - 1);
+  const ranked = allRanked.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <div className="space-y-4">
@@ -323,7 +330,7 @@ function RecsTab({
             href={`/players/${p.id}`}
             className="card card-pad flex items-center gap-3 transition hover:ring-1 hover:ring-brand-500/30"
           >
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/5 text-xs font-bold text-slate-300">{i + 1}</span>
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/5 text-xs font-bold text-slate-300">{current * PAGE_SIZE + i + 1}</span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="truncate font-bold text-white">{p.name}</span>
@@ -343,6 +350,23 @@ function RecsTab({
         ))}
         {ranked.length === 0 && <p className="text-sm text-slate-500">Κανένας παίκτης δεν ταιριάζει στα φίλτρα.</p>}
       </div>
+
+      {allRanked.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[11px] text-slate-500">
+            {current * PAGE_SIZE + 1}–{Math.min((current + 1) * PAGE_SIZE, allRanked.length)} από {allRanked.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button className="btn-ghost !px-2 !py-1 text-xs" disabled={current === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+              <ChevronLeft size={14} /> Προηγ.
+            </button>
+            <span className="font-mono text-[11px] text-slate-400">{current + 1} / {pageCount}</span>
+            <button className="btn-ghost !px-2 !py-1 text-xs" disabled={current >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>
+              Επόμ. <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Honest note on what's still missing */}
       <div className="card card-pad">

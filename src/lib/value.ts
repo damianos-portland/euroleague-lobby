@@ -28,10 +28,10 @@ export interface ValueInput {
 }
 
 // Normalisation anchor, calibrated to the actual league distribution of
-// projected FP-per-credit (median ≈ 1.0, p90 ≈ 1.6). Anchoring "fair" at the
-// median so an average player scores ~50 and elites (≈1.8) score ~90 — the old
-// 2.2 anchor was unreachable and labelled almost everyone "avoid".
-const FAIR_PPC = 1.0; // projected FP per credit = an average value play
+// projected FP-per-credit under the REAL fantasy credits (median ≈ 1.2,
+// p90 ≈ 1.8). Anchoring "fair" at the median so an average player scores ~50
+// and elites (≈1.8) score ~75.
+const FAIR_PPC = 1.2; // projected FP per credit = an average value play
 
 export function evaluateValue(input: ValueInput): ValueOutput {
   const fp = input.projection.projFantasyPoints;

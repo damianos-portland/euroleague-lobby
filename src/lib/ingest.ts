@@ -16,6 +16,7 @@ import { prisma } from "./db";
 import { computeFantasyPoints, Position } from "./types";
 import { fantasyFriendliness } from "./matchup";
 import { recomputeAllProjections } from "./recomputeAll";
+import { getFantasyCredits } from "./fantasyCredits";
 import { titleCase, splitStatsName } from "./names";
 import { rosterStatus } from "./rosterStatus";
 
@@ -419,6 +420,41 @@ export async function snapshotProjections(): Promise<{ date: string; count: numb
     });
   }
   return { date, count: projections.length };
+}
+
+// ---------------------------------------------------------------------------
+// Apply the official EuroLeague Fantasy credits (live via FANTAKING_TOKEN, else
+// the committed seed) onto Player.fantasyPrice by normalised-name match, then
+// recompute so value/recommendations reflect the real prices. Runs in the daily
+// cron AFTER stats/rosters (which reset price to the derived fallback).
+// ---------------------------------------------------------------------------
+const _norm = (s: string) =>
+  s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
+const _tok = (s: string) => _norm(s).split(" ").filter(Boolean).sort().join(" ");
+
+export async function applyFantasyCredits(): Promise<{ source: string; matched: number; total: number }> {
+  const { rows, source } = await getFantasyCredits();
+  const players = await prisma.player.findMany({ select: { id: true, firstName: true, lastName: true } });
+  const byTok = new Map<string, string>();
+  const byLast = new Map<string, string[]>();
+  for (const p of players) {
+    byTok.set(_tok(`${p.firstName} ${p.lastName}`), p.id);
+    const lk = _norm(p.lastName);
+    (byLast.get(lk) ?? byLast.set(lk, []).get(lk)!).push(p.id);
+  }
+  let matched = 0;
+  for (const r of rows) {
+    let id = byTok.get(_tok(r.name));
+    if (!id) {
+      const cands = byLast.get(_norm(r.name).split(" ").filter(Boolean).pop() ?? "");
+      if (cands && cands.length === 1) id = cands[0];
+    }
+    if (!id) continue;
+    await prisma.player.update({ where: { id }, data: { fantasyPrice: r.credit } });
+    matched++;
+  }
+  await recomputeAllProjections();
+  return { source, matched, total: rows.length };
 }
 
 // ---------------------------------------------------------------------------

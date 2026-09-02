@@ -15,7 +15,7 @@ type Tab = "chart" | "recs";
 type Basis = "proj" | "last" | "l5" | "l10";
 
 const POSITIONS = ["PG", "SG", "SF", "PF", "C"];
-const FAIR_PPC = 2.2; // fair value line: proj FP = 2.2 × price
+const GOOD_PPC = 1.3; // "good value" line (≈ top quartile): proj FP = 1.3 × price
 
 const REC_STYLE: Record<string, { color: string; label: string }> = {
   premium_pick: { color: "#f97316", label: "Premium" },
@@ -175,7 +175,7 @@ function ChartTab({
       <div className="card card-pad">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-xs text-slate-400">
-            <span className="font-semibold text-white">Πάνω-δεξιά = ελίτ σκόρερ</span> · πάνω-αριστερά = φθηνά διαμάντια · η διακεκομμένη = δίκαιη αξία ({FAIR_PPC} FP/credit)
+            <span className="font-semibold text-white">Πάνω-δεξιά = ελίτ σκόρερ</span> · πάνω-αριστερά = φθηνά διαμάντια · πάνω από τη διακεκομμένη = καλή αξία ({GOOD_PPC} FP/credit)
           </p>
           <span className="text-xs text-slate-500">{points.length} παίκτες</span>
         </div>
@@ -196,7 +196,7 @@ function ChartTab({
               <ZAxis type="number" dataKey="z" range={[30, 320]} name="Λεπτά" />
               <ReferenceLine
                 ifOverflow="extendDomain"
-                segment={[{ x: 0, y: 0 }, { x: priceCeiling, y: FAIR_PPC * priceCeiling }]}
+                segment={[{ x: 0, y: 0 }, { x: priceCeiling, y: GOOD_PPC * priceCeiling }]}
                 stroke="rgba(148,163,184,0.5)" strokeDasharray="5 4"
               />
               <Tooltip content={<ChartTooltip />} cursor={{ strokeDasharray: "3 3" }} />

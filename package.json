@@ -14,6 +14,7 @@
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
     "db:ingest": "tsx scripts/ingest-euroleague.ts",
     "db:season-open": "tsx scripts/open-season.ts",
+    "db:recompute": "tsx scripts/recompute.ts",
     "setup": "prisma generate && prisma db push && tsx prisma/seed.ts"
   },
   "prisma": {

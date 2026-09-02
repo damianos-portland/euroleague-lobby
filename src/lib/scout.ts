@@ -83,14 +83,17 @@ export function fitScore(p: PlayerDTO, intent: IntentKey): number {
       return (fastStartReadyFP(p) / Math.pow(Math.max(p.fantasyPrice, 1), 1.3)) * consistency * avail;
     }
     case "gems":
-      // cheap + high upside + value, bonus for an active buy signal
+      // cheap + high upside + value, bonus for an active buy signal. A diamond
+      // must actually get court time — no minutes, no breakout.
       if (p.fantasyPrice > 8) return NEG;
+      if (j.projMinutes < 15 || p.depthRole === "deep_bench") return NEG;
       return j.upsideScore * 0.55 + j.valueScore * 0.35 + (j.signal === "buy" ? 12 : 0) + (p.age <= 24 ? 6 : 0);
     case "ceiling":
-      // raw projected production, price ignored
+      // raw projected production, price ignored (low minutes ⇒ low FP already)
       return j.projFantasyPoints;
     case "value":
-      // best points-per-credit
+      // best points-per-credit — but only players who see the floor
+      if (j.projMinutes < 12) return NEG;
       return j.valueScore + j.pointsPerCredit * 4;
     case "safe":
       // consistent, plays real minutes, low injury risk
@@ -98,6 +101,7 @@ export function fitScore(p: PlayerDTO, intent: IntentKey): number {
       return j.consistencyScore * 0.55 + (100 - j.injuryRisk) * 0.3 + Math.min(j.projFantasyPoints, 30) * 0.5;
     case "differential":
       // good risk-adjusted value that the crowd is sleeping on
+      if (j.projMinutes < 12) return NEG;
       return j.riskAdjustedValue - j.ownershipPrediction * 0.45;
     default:
       return NEG;

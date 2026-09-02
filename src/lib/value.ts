@@ -27,8 +27,11 @@ export interface ValueInput {
   matchupDifficulty?: number; // 0-100, higher = tougher schedule (lowers value)
 }
 
-// Normalisation anchors (tuned against a ~10 FP/credit "fair" baseline).
-const FAIR_PPC = 2.2; // projected FP per credit considered "fair value"
+// Normalisation anchor, calibrated to the actual league distribution of
+// projected FP-per-credit (median ≈ 1.0, p90 ≈ 1.6). Anchoring "fair" at the
+// median so an average player scores ~50 and elites (≈1.8) score ~90 — the old
+// 2.2 anchor was unreachable and labelled almost everyone "avoid".
+const FAIR_PPC = 1.0; // projected FP per credit = an average value play
 
 export function evaluateValue(input: ValueInput): ValueOutput {
   const fp = input.projection.projFantasyPoints;
@@ -36,8 +39,8 @@ export function evaluateValue(input: ValueInput): ValueOutput {
 
   const pointsPerCredit = round1(fp / price);
 
-  // valueScore: 0-100, centred so FAIR_PPC -> ~55.
-  const valueScore = clamp(round1((pointsPerCredit / FAIR_PPC) * 55), 0, 100);
+  // valueScore: 0-100, centred so FAIR_PPC (the median) -> 50.
+  const valueScore = clamp(round1((pointsPerCredit / FAIR_PPC) * 50), 0, 100);
 
   // --- Consistency (from last season's per-game stdev relative to mean) ---
   let consistencyScore = 60;
@@ -91,7 +94,8 @@ export function evaluateValue(input: ValueInput): ValueOutput {
     riskAdjustedValue,
     upsideScore,
     input.fantasyPrice,
-    fp
+    fp,
+    input.projection.projMinutes
   );
   const signal = buySellHold(valueScore, riskAdjustedValue, upsideScore, injuryRisk);
 
@@ -126,15 +130,18 @@ function recommend(
   rav: number,
   upside: number,
   price: number,
-  fp: number
+  fp: number,
+  projMinutes: number
 ): Recommendation {
-  // Premium: elite production, worth the credits, low-ish risk.
-  if (fp >= 22 && rav >= 60) return "premium_pick";
-  // Value: strong points-per-credit, especially cheaper players.
-  if (valueScore >= 62 && price <= 8.5) return "value_pick";
-  if (rav >= 58) return "value_pick";
-  // Watchlist: intriguing upside but unproven / risky.
-  if (upside >= 60 || (valueScore >= 50 && rav >= 45)) return "watchlist";
+  // Won't see the floor → not a fantasy asset, regardless of efficiency.
+  if (projMinutes < 12 || fp < 6) return "avoid";
+  // Premium: elite production is a roster anchor even at a premium price —
+  // a big scorer with at-least-fair value is never an "avoid".
+  if (fp >= 24 || (fp >= 19 && valueScore >= 48)) return "premium_pick";
+  // Value: efficient points-per-credit, or a solid producer at good value.
+  if (valueScore >= 62 || (valueScore >= 50 && fp >= 12)) return "value_pick";
+  // Watchlist: real role with upside or above-average value.
+  if (upside >= 58 || valueScore >= 45 || fp >= 12) return "watchlist";
   return "avoid";
 }
 

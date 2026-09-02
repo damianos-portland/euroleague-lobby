@@ -15,6 +15,7 @@
     "db:ingest": "tsx scripts/ingest-euroleague.ts",
     "db:season-open": "tsx scripts/open-season.ts",
     "db:recompute": "tsx scripts/recompute.ts",
+    "db:import-credits": "tsx scripts/import-credits.ts",
     "setup": "prisma generate && prisma db push && tsx prisma/seed.ts"
   },
   "prisma": {

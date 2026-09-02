@@ -428,6 +428,24 @@ export async function snapshotProjections(): Promise<{ date: string; count: numb
 // ---------------------------------------------------------------------------
 const SCHEDULE_SEASON = process.env.EL_SCHEDULE_SEASON || "E2026";
 
+// The schedule feed uses the standard EuroLeague TLA codes, but our Team rows
+// (from the v3 statistics API) use different short codes. Map feed → ours so
+// fixtures line up with player teams. Codes not listed are identical.
+const FIXTURE_CODE_MAP: Record<string, string> = {
+  BAY: "MUN", // Bayern Munich
+  BJK: "BES", // Beşiktaş
+  CZV: "RED", // Crvena Zvezda
+  EFS: "IST", // Anadolu Efes
+  FBT: "ULK", // Fenerbahçe
+  KBA: "BAS", // Baskonia
+  MTA: "TEL", // Maccabi Tel Aviv
+  PAO: "PAN", // Panathinaikos
+  PBB: "PRS", // Paris
+  RMB: "MAD", // Real Madrid
+  VBC: "PAM", // Valencia
+};
+const mapCode = (c: string) => FIXTURE_CODE_MAP[c] ?? c;
+
 export async function ingestSchedule(
   season: string = SCHEDULE_SEASON
 ): Promise<{ season: string; count: number }> {
@@ -436,21 +454,20 @@ export async function ingestSchedule(
   if (!res.ok) throw new Error(`schedule fetch ${res.status}`);
   const json = await res.json();
   const games: any[] = json?.data ?? [];
-  let count = 0;
-  for (const g of games) {
-    const home = (g?.home?.tla ?? g?.home?.code ?? "").toUpperCase();
-    const away = (g?.away?.tla ?? g?.away?.code ?? "").toUpperCase();
-    const round = Number(g?.round?.round);
-    const date = g?.date ? new Date(g.date) : null;
-    if (!home || !away || !round || !date) continue;
-    await prisma.fixture.upsert({
-      where: { season_round_homeCode_awayCode: { season, round, homeCode: home, awayCode: away } },
-      create: { season, round, date, homeCode: home, awayCode: away, status: g?.status ?? "confirmed" },
-      update: { date, status: g?.status ?? "confirmed" },
-    });
-    count++;
-  }
-  return { season, count };
+  const rows = games
+    .map((g) => {
+      const home = mapCode((g?.home?.tla ?? g?.home?.code ?? "").toUpperCase());
+      const away = mapCode((g?.away?.tla ?? g?.away?.code ?? "").toUpperCase());
+      const round = Number(g?.round?.round);
+      const date = g?.date ? new Date(g.date) : null;
+      if (!home || !away || !round || !date) return null;
+      return { season, round, date, homeCode: home, awayCode: away, status: g?.status ?? "confirmed" };
+    })
+    .filter(Boolean) as { season: string; round: number; date: Date; homeCode: string; awayCode: string; status: string }[];
+  // Codes changed vs any prior run → rebuild the season cleanly.
+  await prisma.fixture.deleteMany({ where: { season } });
+  await prisma.fixture.createMany({ data: rows });
+  return { season, count: rows.length };
 }
 
 // ---------------------------------------------------------------------------

@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
 import {
   ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell,
 } from "recharts";
-import { ScatterChart as ScatterIcon, ListChecks, Info, TrendingUp, Home, Plane } from "lucide-react";
+import { ScatterChart as ScatterIcon, ListChecks, Info, TrendingUp, Home, Plane, ChevronLeft, ChevronRight } from "lucide-react";
 import type { PlayerDTO } from "@/lib/queries";
 import { INTENTS, IntentKey, rankByIntent, intentReason, MATCHUP_FACTORS } from "@/lib/scout";
 import { forecastPlayer, PredictModel, Fixture } from "@/lib/predict";
@@ -379,9 +379,11 @@ function PredictionsTab({
 }) {
   const [model, setModel] = useState<PredictModel>("elastic");
   const [horizon, setHorizon] = useState<3 | 5 | 10>(5);
+  const [page, setPage] = useState(0);
   const hKey = (`g${horizon}` as "g3" | "g5" | "g10");
+  const PAGE_SIZE = 25;
 
-  const rows = useMemo(() => {
+  const allRows = useMemo(() => {
     return base
       .filter((p) => p.proj && p.teamShort)
       .map((p) => ({
@@ -389,9 +391,14 @@ function PredictionsTab({
         f: forecastPlayer(p.teamShort!, p.proj!.projFantasyPoints, p.fantasyPrice, fixtures, friendliness, model, nowMs),
       }))
       .filter((x) => x.f.games.length > 0)
-      .sort((a, b) => b.f.avg[hKey] - a.f.avg[hKey])
-      .slice(0, 40);
+      .sort((a, b) => b.f.avg[hKey] - a.f.avg[hKey]);
   }, [base, fixtures, friendliness, model, nowMs, hKey]);
+
+  useEffect(() => { setPage(0); }, [base]); // reset paging when the team/pos filter changes
+
+  const pageCount = Math.max(1, Math.ceil(allRows.length / PAGE_SIZE));
+  const current = Math.min(page, pageCount - 1);
+  const rows = allRows.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
 
   if (fixtures.length === 0) {
     return (
@@ -409,7 +416,7 @@ function PredictionsTab({
           <span className="text-[11px] text-slate-400">Μοντέλο</span>
           <div className="flex gap-1">
             {([["elastic", "🟢 Ελαστικό"], ["strict", "🔵 Αυστηρό"]] as [PredictModel, string][]).map(([k, lbl]) => (
-              <button key={k} onClick={() => setModel(k)}
+              <button key={k} onClick={() => { setModel(k); setPage(0); }}
                 className={clsx("btn !px-3 !py-1.5 text-xs", model === k ? "bg-brand-500/20 text-brand-400 ring-1 ring-brand-500/40" : "btn-ghost")}>
                 {lbl}
               </button>
@@ -420,7 +427,7 @@ function PredictionsTab({
           <span className="text-[11px] text-slate-400">Ορίζοντας</span>
           <div className="flex gap-1">
             {([3, 5, 10] as const).map((h) => (
-              <button key={h} onClick={() => setHorizon(h)}
+              <button key={h} onClick={() => { setHorizon(h); setPage(0); }}
                 className={clsx("btn !px-3 !py-1.5 text-xs", horizon === h ? "bg-brand-500/20 text-brand-400 ring-1 ring-brand-500/40" : "btn-ghost")}>
                 {h} παιχνίδια
               </button>
@@ -444,7 +451,7 @@ function PredictionsTab({
           return (
             <div key={p.id} className="card card-pad">
               <div className="flex items-center gap-3">
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/5 text-xs font-bold text-slate-300">{i + 1}</span>
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/5 text-xs font-bold text-slate-300">{current * PAGE_SIZE + i + 1}</span>
                 <Link href={`/players/${p.id}`} className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate font-bold text-white hover:text-brand-400">{p.name}</span>
@@ -485,6 +492,23 @@ function PredictionsTab({
         })}
         {rows.length === 0 && <p className="text-sm text-slate-500">Κανένας παίκτης με επερχόμενα παιχνίδια στα φίλτρα.</p>}
       </div>
+
+      {allRows.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[11px] text-slate-500">
+            {current * PAGE_SIZE + 1}–{Math.min((current + 1) * PAGE_SIZE, allRows.length)} από {allRows.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button className="btn-ghost !px-2 !py-1 text-xs" disabled={current === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+              <ChevronLeft size={14} /> Προηγ.
+            </button>
+            <span className="font-mono text-[11px] text-slate-400">{current + 1} / {pageCount}</span>
+            <button className="btn-ghost !px-2 !py-1 text-xs" disabled={current >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>
+              Επόμ. <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card card-pad">
         <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-300">

@@ -423,6 +423,37 @@ export async function snapshotProjections(): Promise<{ date: string; count: numb
 }
 
 // ---------------------------------------------------------------------------
+// Schedule ingest — pull the full season fixture list from the EuroLeague feed
+// and upsert Fixture rows (powers the Scout Predictions matchup forecasts).
+// ---------------------------------------------------------------------------
+const SCHEDULE_SEASON = process.env.EL_SCHEDULE_SEASON || "E2026";
+
+export async function ingestSchedule(
+  season: string = SCHEDULE_SEASON
+): Promise<{ season: string; count: number }> {
+  const url = `https://feeds.incrowdsports.com/provider/euroleague-feeds/v2/competitions/E/seasons/${season}/games?limit=400`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error(`schedule fetch ${res.status}`);
+  const json = await res.json();
+  const games: any[] = json?.data ?? [];
+  let count = 0;
+  for (const g of games) {
+    const home = (g?.home?.tla ?? g?.home?.code ?? "").toUpperCase();
+    const away = (g?.away?.tla ?? g?.away?.code ?? "").toUpperCase();
+    const round = Number(g?.round?.round);
+    const date = g?.date ? new Date(g.date) : null;
+    if (!home || !away || !round || !date) continue;
+    await prisma.fixture.upsert({
+      where: { season_round_homeCode_awayCode: { season, round, homeCode: home, awayCode: away } },
+      create: { season, round, date, homeCode: home, awayCode: away, status: g?.status ?? "confirmed" },
+      update: { date, status: g?.status ?? "confirmed" },
+    });
+    count++;
+  }
+  return { season, count };
+}
+
+// ---------------------------------------------------------------------------
 // Apply the official EuroLeague Fantasy credits (live via FANTAKING_TOKEN, else
 // the committed seed) onto Player.fantasyPrice by normalised-name match, then
 // recompute so value/recommendations reflect the real prices. Runs in the daily

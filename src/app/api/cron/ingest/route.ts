@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ingestLiveSeason, ingestRosters, applyFantasyCredits, snapshotProjections } from "@/lib/ingest";
+import { ingestLiveSeason, ingestRosters, ingestSchedule, applyFantasyCredits, snapshotProjections } from "@/lib/ingest";
 import { scrapeNews } from "@/lib/newsScraper";
 
 // Prisma needs the Node.js runtime; never statically evaluate this route.
@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
 
   await run("stats", () => ingestLiveSeason());
   await run("rosters", () => ingestRosters());
+  await run("schedule", () => ingestSchedule()); // upcoming fixtures for predictions
   await run("credits", () => applyFantasyCredits()); // real fantasy prices + recompute
   await run("news", () => scrapeNews());
   await run("snapshot", () => snapshotProjections());

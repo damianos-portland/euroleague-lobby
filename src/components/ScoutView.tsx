@@ -7,11 +7,12 @@ import clsx from "clsx";
 import {
   ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell,
 } from "recharts";
-import { ScatterChart as ScatterIcon, ListChecks, Info } from "lucide-react";
+import { ScatterChart as ScatterIcon, ListChecks, Info, TrendingUp, Home, Plane } from "lucide-react";
 import type { PlayerDTO } from "@/lib/queries";
 import { INTENTS, IntentKey, rankByIntent, intentReason, MATCHUP_FACTORS } from "@/lib/scout";
+import { forecastPlayer, PredictModel, Fixture } from "@/lib/predict";
 
-type Tab = "chart" | "recs";
+type Tab = "chart" | "recs" | "pred";
 type Basis = "proj" | "last" | "l5" | "l10";
 
 const POSITIONS = ["PG", "SG", "SF", "PF", "C"];
@@ -27,9 +28,15 @@ const REC_STYLE: Record<string, { color: string; label: string }> = {
 export function ScoutView({
   players,
   teams,
+  fixtures = [],
+  friendliness = {},
+  nowMs = Date.now(),
 }: {
   players: PlayerDTO[];
   teams: { id: string; shortName: string; name: string }[];
+  fixtures?: Fixture[];
+  friendliness?: Record<string, number>;
+  nowMs?: number;
 }) {
   const [tab, setTab] = useState<Tab>("chart");
   const [team, setTeam] = useState("ALL");
@@ -69,13 +76,14 @@ export function ScoutView({
       <div className="flex items-center gap-2">
         <TabBtn active={tab === "chart"} onClick={() => setTab("chart")} icon={<ScatterIcon size={15} />} label="Διάγραμμα" />
         <TabBtn active={tab === "recs"} onClick={() => setTab("recs")} icon={<ListChecks size={15} />} label="Προτάσεις" />
+        <TabBtn active={tab === "pred"} onClick={() => setTab("pred")} icon={<TrendingUp size={15} />} label="Προβλέψεις" />
       </div>
 
       {/* Shared filters */}
       <div className="flex flex-wrap items-end gap-3">
         <Select label="Ομάδα" value={team} onChange={setTeam} options={[["ALL", "Όλες"], ...teams.map((t) => [t.shortName, t.shortName] as [string, string])]} />
         <Select label="Θέση" value={pos} onChange={setPos} options={[["ALL", "Όλες"], ...POSITIONS.map((p) => [p, p] as [string, string])]} />
-        {tab === "chart" ? (
+        {tab === "chart" && (
           <>
             <div className="flex flex-col gap-1">
               <span className="text-[11px] text-slate-400">Βάση</span>
@@ -105,7 +113,8 @@ export function ScoutView({
               <input type="range" min={0} max={30} step={1} value={minFp} onChange={(e) => setMinFp(+e.target.value)} className="accent-brand-500" />
             </div>
           </>
-        ) : (
+        )}
+        {tab === "recs" && (
           <div className="flex flex-col gap-1">
             <span className="text-[11px] text-slate-400">Μέγ. τιμή: {maxPrice >= priceCeiling ? "όλες" : maxPrice.toFixed(0)}</span>
             <input type="range" min={1} max={priceCeiling} step={1} value={Math.min(maxPrice, priceCeiling)} onChange={(e) => setMaxPrice(+e.target.value)} className="accent-brand-500" />
@@ -113,11 +122,9 @@ export function ScoutView({
         )}
       </div>
 
-      {tab === "chart" ? (
-        <ChartTab base={base} yOf={yOf} minFp={minFp} basis={basis} priceCeiling={priceCeiling} />
-      ) : (
-        <RecsTab base={base} intent={intent} setIntent={setIntent} maxPrice={maxPrice} priceCeiling={priceCeiling} />
-      )}
+      {tab === "chart" && <ChartTab base={base} yOf={yOf} minFp={minFp} basis={basis} priceCeiling={priceCeiling} />}
+      {tab === "recs" && <RecsTab base={base} intent={intent} setIntent={setIntent} maxPrice={maxPrice} priceCeiling={priceCeiling} />}
+      {tab === "pred" && <PredictionsTab base={base} fixtures={fixtures} friendliness={friendliness} nowMs={nowMs} />}
     </div>
   );
 }
@@ -355,6 +362,143 @@ function RecsTab({
 function recChip(rec: string): React.CSSProperties {
   const c = REC_STYLE[rec]?.color ?? "#64748b";
   return { background: `${c}22`, color: c };
+}
+
+// --- Predictions tab ------------------------------------------------------
+
+function PredictionsTab({
+  base,
+  fixtures,
+  friendliness,
+  nowMs,
+}: {
+  base: PlayerDTO[];
+  fixtures: Fixture[];
+  friendliness: Record<string, number>;
+  nowMs: number;
+}) {
+  const [model, setModel] = useState<PredictModel>("elastic");
+  const [horizon, setHorizon] = useState<3 | 5 | 10>(5);
+  const hKey = (`g${horizon}` as "g3" | "g5" | "g10");
+
+  const rows = useMemo(() => {
+    return base
+      .filter((p) => p.proj && p.teamShort)
+      .map((p) => ({
+        p,
+        f: forecastPlayer(p.teamShort!, p.proj!.projFantasyPoints, p.fantasyPrice, fixtures, friendliness, model, nowMs),
+      }))
+      .filter((x) => x.f.games.length > 0)
+      .sort((a, b) => b.f.avg[hKey] - a.f.avg[hKey])
+      .slice(0, 40);
+  }, [base, fixtures, friendliness, model, nowMs, hKey]);
+
+  if (fixtures.length === 0) {
+    return (
+      <div className="card card-pad py-12 text-center text-sm text-slate-500">
+        Δεν έχει φορτωθεί πρόγραμμα ακόμη — τρέξε το ingest του schedule.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Controls */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] text-slate-400">Μοντέλο</span>
+          <div className="flex gap-1">
+            {([["elastic", "🟢 Ελαστικό"], ["strict", "🔵 Αυστηρό"]] as [PredictModel, string][]).map(([k, lbl]) => (
+              <button key={k} onClick={() => setModel(k)}
+                className={clsx("btn !px-3 !py-1.5 text-xs", model === k ? "bg-brand-500/20 text-brand-400 ring-1 ring-brand-500/40" : "btn-ghost")}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] text-slate-400">Ορίζοντας</span>
+          <div className="flex gap-1">
+            {([3, 5, 10] as const).map((h) => (
+              <button key={h} onClick={() => setHorizon(h)}
+                className={clsx("btn !px-3 !py-1.5 text-xs", horizon === h ? "bg-brand-500/20 text-brand-400 ring-1 ring-brand-500/40" : "btn-ghost")}>
+                {h} παιχνίδια
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="ml-auto max-w-xs text-[11px] text-slate-500">
+          {model === "elastic"
+            ? "Αισιόδοξο: μεγάλο matchup swing, ευρύ credit range."
+            : "Συντηρητικό: μουτ matchup, στενό credit range."}
+        </p>
+      </div>
+
+      {/* Rows */}
+      <div className="space-y-2">
+        {rows.map(({ p, f }, i) => {
+          const [lo, hi] = f.credit[hKey];
+          const dLo = lo - f.credit.current;
+          const dHi = hi - f.credit.current;
+          const sg = (v: number) => (v >= 0 ? "+" : "") + v.toFixed(1);
+          return (
+            <div key={p.id} className="card card-pad">
+              <div className="flex items-center gap-3">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/5 text-xs font-bold text-slate-300">{i + 1}</span>
+                <Link href={`/players/${p.id}`} className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-bold text-white hover:text-brand-400">{p.name}</span>
+                    <span className="chip bg-white/5 text-slate-300">{p.position}</span>
+                    <span className="text-xs text-slate-500">{p.teamShort}</span>
+                    {p.proj?.projectedRole?.startsWith("Credit-based") && (
+                      <span className="chip bg-amber-500/15 text-amber-300" title="Χωρίς EL ιστορικό — εκτίμηση από το credit">est</span>
+                    )}
+                  </div>
+                </Link>
+                {/* avg FFP */}
+                <div className="shrink-0 text-right">
+                  <div className="stat text-lg font-black text-white">{f.avg[hKey].toFixed(1)}</div>
+                  <div className="stat text-[10px] text-slate-500">avg FFP · {horizon}g</div>
+                </div>
+                {/* credit range */}
+                <div className="w-28 shrink-0 text-right" title={`Πρόβλεψη credit σε ${horizon} παιχνίδια`}>
+                  <div className="stat text-sm font-bold text-white">{lo.toFixed(1)}–{hi.toFixed(1)}<span className="text-slate-500">cr</span></div>
+                  <div className="stat text-[10px]">
+                    <span className={dLo >= 0 ? "text-emerald-400" : "text-rose-400"}>{sg(dLo)}</span>
+                    <span className="text-slate-600"> … </span>
+                    <span className={dHi >= 0 ? "text-emerald-400" : "text-rose-400"}>{sg(dHi)}</span>
+                  </div>
+                </div>
+              </div>
+              {/* per-game breakdown */}
+              <div className="mt-2 flex flex-wrap gap-1.5 border-t border-white/5 pt-2">
+                {f.games.slice(0, horizon).map((g, gi) => (
+                  <span key={gi} className="inline-flex items-center gap-1 rounded-md bg-white/[0.03] px-1.5 py-0.5 text-[10px]" title={`R${g.round} · ${g.date.slice(0, 10)}`}>
+                    {g.home ? <Home size={9} className="text-slate-500" /> : <Plane size={9} className="text-slate-500" />}
+                    <span className="text-slate-400">{g.opponent}</span>
+                    <span className="stat font-semibold text-white">{g.expFFP.toFixed(1)}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {rows.length === 0 && <p className="text-sm text-slate-500">Κανένας παίκτης με επερχόμενα παιχνίδια στα φίλτρα.</p>}
+      </div>
+
+      <div className="card card-pad">
+        <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+          <Info size={13} className="text-brand-400" /> Πώς υπολογίζεται
+        </div>
+        <p className="text-[11px] text-slate-500">
+          Αναμενόμενα FFP = προβλεπόμενα FP × matchup (πόσο fantasy-friendly είναι ο αντίπαλος + έδρα), ανά παιχνίδι από το πρόγραμμα.
+          Το credit range είναι ευρετική εκτίμηση (η επίσημη φόρμουλα δεν δημοσιεύεται): κερδίζεις credit όταν ξεπερνάς το «implied score»
+          της τιμής σου, χάνεις όταν υπολείπεσαι· οι φθηνοί κινούνται περισσότερο. Το <span className="text-amber-300">est</span> = newcomer χωρίς EL ιστορικό (εκτίμηση από credit).
+          <span className="text-slate-600"> Per-position defense & φόρμα L5/L10 μπαίνουν όταν αρχίσουν οι αγώνες.</span>
+        </p>
+      </div>
+    </div>
+  );
 }
 
 // --- shared bits ----------------------------------------------------------

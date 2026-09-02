@@ -456,3 +456,20 @@ model ProjectionSnapshot {
   @@unique([playerId, date])
   @@index([date])
 }
+
+// EuroLeague fixtures (schedule) — powers the Scout "Predictions" tab: each
+// team's upcoming opponents drive the matchup-adjusted FFP + credit forecasts.
+model Fixture {
+  id        String   @id @default(cuid())
+  season    String
+  round     Int
+  date      DateTime
+  homeCode  String // team tla/shortName, e.g. "OLY"
+  awayCode  String
+  status    String   @default("confirmed")
+
+  @@unique([season, round, homeCode, awayCode])
+  @@index([season, round])
+  @@index([homeCode])
+  @@index([awayCode])
+}

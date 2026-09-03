@@ -83,6 +83,9 @@ model Player {
   // Stable EuroLeague person code — robust match key across seasons/feeds
   // (nullable for legacy rows; unique index allows multiple NULLs on Postgres).
   personCode String? @unique
+  // Stable fantasy-game (Dunkest/fantaking) player id — the authoritative key
+  // for the game roster; set on credit sync. Null ⇒ not (yet) in the game.
+  fantasyId  Int?    @unique
   firstName String
   lastName  String
   // position: "PG" | "SG" | "SF" | "PF" | "C"

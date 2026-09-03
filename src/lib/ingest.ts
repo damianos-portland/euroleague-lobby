@@ -478,31 +478,111 @@ export async function ingestSchedule(
 // ---------------------------------------------------------------------------
 const _norm = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
-const _tok = (s: string) => _norm(s).split(" ").filter(Boolean).sort().join(" ");
+const _SUFFIX = new Set(["jr", "sr", "ii", "iii", "iv", "v"]);
+// order-agnostic, accent-insensitive, suffix-stripped token key ("McKinley
+// Wright IV" → "mckinley wright"). No lastName fallback — it caused false hits.
+const _tok = (s: string) => _norm(s).split(" ").filter((t) => t && !_SUFFIX.has(t)).sort().join(" ");
 
-export async function applyFantasyCredits(): Promise<{ source: string; matched: number; total: number }> {
+// The fantasy game classifies players as Guard/Forward/Center (its authoritative
+// position). Reconcile with our finer PG/SG/SF/PF/C: keep our fine position when
+// it's in the game's bucket, otherwise reset to the bucket default. This fixes
+// wrong buckets (e.g. Moses Wright PF → C) without flattening PG/SG, SF/PF.
+const POS_BUCKET: Record<string, Position[]> = {
+  Guard: ["PG", "SG"],
+  Forward: ["SF", "PF"],
+  Center: ["C"],
+};
+const GAME_POS: Record<string, Position> = { Guard: "SG", Forward: "SF", Center: "C" };
+function reconcilePos(gamePos: string | undefined, current: string): Position {
+  const bucket = gamePos ? POS_BUCKET[gamePos] : undefined;
+  if (!bucket) return current as Position;
+  if (bucket.includes(current as Position)) return current as Position;
+  return GAME_POS[gamePos!];
+}
+
+// The fantasy game's player list is the AUTHORITATIVE roster. For each game
+// player: match by stable fantasyId → suffix-stripped name → create; set their
+// team, position (Guard/Forward/Center), credit and fantasyId. Anyone NOT in the
+// list is deleted (no free agents), plus teams no longer in the league (Monaco).
+// Then recompute. This is what makes the app's roster == the game's roster.
+export async function applyFantasyCredits(): Promise<{
+  source: string; updated: number; created: number; deleted: number; total: number; unknownTeams: string[];
+}> {
   const { rows, source } = await getFantasyCredits();
-  const players = await prisma.player.findMany({ select: { id: true, firstName: true, lastName: true } });
+  const [players, teams] = await Promise.all([
+    prisma.player.findMany({ select: { id: true, firstName: true, lastName: true, position: true, fantasyId: true } }),
+    prisma.team.findMany({ select: { id: true, shortName: true } }),
+  ]);
+  const teamByShort = new Map(teams.map((t) => [t.shortName.toUpperCase(), t.id]));
+  const posById = new Map(players.map((p) => [p.id, p.position]));
+  const byFantasyId = new Map<number, string>();
   const byTok = new Map<string, string>();
-  const byLast = new Map<string, string[]>();
   for (const p of players) {
+    if (p.fantasyId != null) byFantasyId.set(p.fantasyId, p.id);
     byTok.set(_tok(`${p.firstName} ${p.lastName}`), p.id);
-    const lk = _norm(p.lastName);
-    (byLast.get(lk) ?? byLast.set(lk, []).get(lk)!).push(p.id);
   }
-  let matched = 0;
+
+  let updated = 0, created = 0;
+  const seen = new Set<string>();
+  const unknownTeams = new Set<string>();
   for (const r of rows) {
-    let id = byTok.get(_tok(r.name));
-    if (!id) {
-      const cands = byLast.get(_norm(r.name).split(" ").filter(Boolean).pop() ?? "");
-      if (cands && cands.length === 1) id = cands[0];
+    const short = r.teamAbbr ? mapCode(r.teamAbbr.toUpperCase()) : null;
+    const teamId = short ? teamByShort.get(short) ?? null : null;
+    if (r.teamAbbr && !teamId) unknownTeams.add(r.teamAbbr);
+    if (!teamId) continue; // a game player must belong to a league team
+
+    const id = byFantasyId.get(r.gameId) ?? byTok.get(_tok(r.name));
+    if (id) {
+      await prisma.player.update({
+        where: { id },
+        data: {
+          fantasyId: r.gameId,
+          fantasyPrice: r.credit,
+          teamId,
+          position: reconcilePos(r.position, posById.get(id) ?? "SF"),
+        },
+      });
+      seen.add(id);
+      updated++;
+    } else {
+      const np = await prisma.player.create({
+        data: {
+          fantasyId: r.gameId,
+          firstName: r.firstName || r.name,
+          lastName: r.lastName || "",
+          position: GAME_POS[r.position ?? ""] ?? "SF",
+          nationality: "—",
+          age: 25,
+          status: "unproven",
+          depthRole: "rotation",
+          fantasyPrice: r.credit,
+          teamId,
+          tags: "newcomer",
+        },
+      });
+      seen.add(np.id);
+      created++;
     }
-    if (!id) continue;
-    await prisma.player.update({ where: { id }, data: { fantasyPrice: r.credit } });
-    matched++;
   }
+
+  // Delete everyone NOT in the game list (free agents, departed, wrong teams).
+  const toDelete = players.filter((p) => !seen.has(p.id)).map((p) => p.id);
+  if (toDelete.length) {
+    // Only DraftPick lacks a cascade — clear it first, the rest cascades.
+    await prisma.draftPick.deleteMany({ where: { playerId: { in: toDelete } } });
+    await prisma.player.deleteMany({ where: { id: { in: toDelete } } });
+  }
+  // Teams no longer in the league (e.g. Monaco) are now player-less → remove
+  // them (clear roster-moves first, which reference teams).
+  const emptyTeams = await prisma.team.findMany({ where: { players: { none: {} } }, select: { id: true } });
+  if (emptyTeams.length) {
+    const ids = emptyTeams.map((t) => t.id);
+    await prisma.rosterMove.deleteMany({ where: { OR: [{ fromTeamId: { in: ids } }, { toTeamId: { in: ids } }] } });
+    await prisma.team.deleteMany({ where: { id: { in: ids } } });
+  }
+
   await recomputeAllProjections();
-  return { source, matched, total: rows.length };
+  return { source, updated, created, deleted: toDelete.length, total: rows.length, unknownTeams: [...unknownTeams] };
 }
 
 // ---------------------------------------------------------------------------

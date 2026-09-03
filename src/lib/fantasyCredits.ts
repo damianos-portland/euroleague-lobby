@@ -14,10 +14,14 @@ import fs from "node:fs";
 import path from "node:path";
 
 export interface CreditRow {
+  gameId: number; // stable fantaking player id
   name: string;
+  firstName: string;
+  lastName: string;
   credit: number;
-  team?: string;
-  position?: string;
+  teamAbbr?: string; // fantaking abbreviation (standard EL TLA, e.g. "EFS")
+  teamName?: string;
+  position?: string; // "Guard" | "Forward" | "Center"
 }
 
 const API = "https://fantaking-api.dunkest.com/api/v1";
@@ -29,13 +33,21 @@ const SEED_PATH = path.join(process.cwd(), "data", "fantasy-credits-2026-27.json
 function normalize(data: any[]): CreditRow[] {
   return (data || [])
     .filter((p) => p?.position?.name !== "Head Coach")
-    .map((p) => ({
-      name: `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim(),
-      credit: Number(p.quotation),
-      team: p.team?.abbreviation,
-      position: p.position?.name,
-    }))
-    .filter((r) => r.name && Number.isFinite(r.credit));
+    .map((p) => {
+      const firstName = String(p.first_name ?? "").trim();
+      const lastName = String(p.last_name ?? "").trim();
+      return {
+        gameId: Number(p.id),
+        name: `${firstName} ${lastName}`.trim(),
+        firstName,
+        lastName,
+        credit: Number(p.quotation),
+        teamAbbr: p.team?.abbreviation,
+        teamName: p.team?.name,
+        position: p.position?.name,
+      };
+    })
+    .filter((r) => r.name && Number.isFinite(r.credit) && Number.isFinite(r.gameId));
 }
 
 // Live pull from the fantaking API. Returns null on any failure so callers can

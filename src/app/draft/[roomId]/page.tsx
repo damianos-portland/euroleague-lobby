@@ -392,10 +392,13 @@ function RosterNeeds({ participant }: { participant: any }) {
 function DraftBoard({ state, youId }: { state: any; youId?: string }) {
   const parts = state.participants;
   const rounds = state.room.rounds;
-  // pick lookup by overall.
-  const byOverall = new Map<number, any>();
-  for (const pk of state.picks) byOverall.set(pk.overall, pk);
-  const n = parts.length;
+  // Place each pick under the team that actually made it, at its round — snake
+  // reversal is already baked into the pick's participant, so we never recompute
+  // seats here (that was the bug: cells were filled by overall index).
+  const byPartRound = new Map<string, any>();
+  for (const pk of state.picks) byPartRound.set(`${pk.participantId}|${pk.round}`, pk);
+  const onClockId = state.onTheClock?.id;
+  const currentRound = state.room.currentPickIndex != null ? Math.floor(state.room.currentPickIndex / Math.max(1, parts.length)) + 1 : -1;
 
   return (
     <table className="w-full min-w-[700px] border-separate border-spacing-1">
@@ -411,18 +414,14 @@ function DraftBoard({ state, youId }: { state: any; youId?: string }) {
         {Array.from({ length: rounds }).map((_, r) => (
           <tr key={r}>
             <td className="td text-center text-slate-500">{r + 1}</td>
-            {parts.map((_: any, col: number) => {
-              // snake: even round left-to-right, odd reversed
-              const orderIdx = r % 2 === 0 ? col : n - 1 - col;
-              const overall = r * n + col;
-              const part = parts.find((p: any) => p.draftOrder === orderIdx);
-              const pick = byOverall.get(overall);
-              const isCurrent = overall === state.room.currentPickIndex && !state.complete;
+            {parts.map((p: any) => {
+              const pick = byPartRound.get(`${p.id}|${r + 1}`);
+              const isCurrent = !state.complete && r + 1 === currentRound && p.id === onClockId;
               return (
-                <td key={col} className={clsx(
+                <td key={p.id} className={clsx(
                   "rounded-lg px-2 py-1.5 text-center text-[11px]",
                   isCurrent ? "bg-brand-500/20 ring-1 ring-brand-500/40" : pick ? "bg-white/[0.04]" : "bg-white/[0.015]",
-                  part?.id === youId && "outline outline-1 outline-brand-500/20"
+                  p.id === youId && "outline outline-1 outline-brand-500/20"
                 )}>
                   {pick ? (
                     <div>

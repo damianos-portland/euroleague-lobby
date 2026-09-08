@@ -116,7 +116,7 @@ export async function loadDraftState(roomId: string) {
     participants,
     picks: room.picks.map((p) => ({
       overall: p.overall, round: p.round, pickInRound: p.pickInRound, auto: p.auto,
-      teamName: p.participant.teamName, player: toDraftable(p.player),
+      participantId: p.participantId, teamName: p.participant.teamName, player: toDraftable(p.player),
     })),
     available,
     onTheClock: onTheClock ? { id: onTheClock.id, teamName: onTheClock.teamName } : null,

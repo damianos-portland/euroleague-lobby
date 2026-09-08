@@ -111,7 +111,7 @@ export async function loadDraftState(roomId: string) {
     room: {
       id: room.id, name: room.name, status: room.status, rounds: room.rounds,
       pickSeconds: room.pickSeconds, rosterSlots: room.rosterSlots,
-      currentPickIndex: room.currentPickIndex, season: room.season,
+      currentPickIndex: room.currentPickIndex, season: room.season, ownerId: room.ownerId,
     },
     participants,
     picks: room.picks.map((p) => ({

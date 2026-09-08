@@ -29,6 +29,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const uid = session.user.id;
   const forbidden = () => NextResponse.json({ error: "Δεν έχεις δικαίωμα γι' αυτή την ενέργεια." }, { status: 403 });
 
+  // The "host" = admin OR the room owner (commissioner) — runs the draft.
+  const roomMeta = await prisma.draftRoom.findUnique({ where: { id: roomId }, select: { ownerId: true } });
+  const isHost = isAdmin || (!!roomMeta && roomMeta.ownerId === uid);
+
   // Helper: does the current user own a given participant slot?
   async function ownsSlot(participantId: string) {
     const p = await prisma.draftParticipant.findFirst({ where: { id: participantId, roomId } });
@@ -39,16 +43,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     switch (action) {
       case "start":
       case "resume":
-        if (!isAdmin) return forbidden();
+        if (!isHost) return forbidden();
         await setStatus(roomId, "drafting");
         break;
       case "pause":
-        if (!isAdmin) return forbidden();
+        if (!isHost) return forbidden();
         await setStatus(roomId, "paused");
         break;
       case "pick": {
         if (!body.playerId) throw new Error("playerId required");
-        if (!isAdmin) {
+        if (!isHost) {
           const oc = await onClockParticipant(roomId);
           // Allow the on-clock user, or anyone when the slot is unassigned (hotseat).
           if (!oc || (oc.userId != null && oc.userId !== uid)) return forbidden();
@@ -57,16 +61,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         break;
       }
       case "autopick": {
-        if (!isAdmin) {
+        if (!isHost) {
           const oc = await onClockParticipant(roomId);
-          // Non-admins may only advance a CPU (auto) slot, never a human's turn.
+          // Non-hosts may only advance a CPU (auto) slot, never a human's turn.
           if (!oc || !oc.isAutopick) return forbidden();
         }
         await autoPickCurrent(roomId);
         break;
       }
       case "undo":
-        if (!isAdmin) return forbidden();
+        if (!isHost) return forbidden();
         await undoLastPick(roomId);
         break;
       case "queueAdd": {

@@ -29,6 +29,10 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   const [lens, setLens] = useState<AdviceKind>("best");
   const [q, setQ] = useState("");
   const [posFilter, setPosFilter] = useState<string>("ALL");
+  type SortCol = "price" | "projfp" | "value";
+  const [sort, setSort] = useState<{ col: SortCol | null; dir: "desc" | "asc" }>({ col: null, dir: "desc" });
+  const toggleSort = (col: SortCol) =>
+    setSort((s) => (s.col !== col ? { col, dir: "desc" } : s.dir === "desc" ? { col, dir: "asc" } : { col: null, dir: "desc" }));
   const [notes, setNotes] = useState("");
   const [viewer, setViewer] = useState<{ id: string; role: string } | null>(null);
   const actingRef = useRef(false);
@@ -65,6 +69,8 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   }, [refresh]);
 
   const isAdmin = viewer?.role === "admin";
+  const isOwner = !!(viewer && state?.room?.ownerId && viewer.id === state.room.ownerId);
+  const canHost = isAdmin || isOwner; // run the draft: start / pause / resume / undo / autopick
   const onClockId = state?.onTheClock?.id;
   const onClockParticipant = state?.participants.find((p: any) => p.id === onClockId) ?? null;
 
@@ -80,9 +86,9 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   const yourTurn = !!(onClockId && myParticipant && onClockId === myParticipant.id);
   // A slot with no assigned user = a "hotseat" team anyone present can draft for.
   const onClockUnassigned = !!(onClockParticipant && !onClockParticipant.userId);
-  // Who may submit the pick: the on-clock user, any admin, or (hotseat) anyone
-  // when nobody owns the on-clock slot.
-  const canPick = isAdmin || yourTurn || onClockUnassigned;
+  // Who may submit the pick: the on-clock user, the host (admin/owner), or
+  // (hotseat) anyone when nobody owns the on-clock slot.
+  const canPick = canHost || yourTurn || onClockUnassigned;
 
   // CPU auto-advance: when a bot is on the clock, pick automatically.
   useEffect(() => {
@@ -103,13 +109,19 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
 
   const ranked = useMemo(() => {
     if (!state) return [];
-    const list = advise(available, yourPositions, state.room.rosterSlots, lens, 200);
-    return list.filter(
+    const list = advise(available, yourPositions, state.room.rosterSlots, lens, available.length).filter(
       (p) =>
         (posFilter === "ALL" || fantasyBucket(p.position) === posFilter) &&
         (!q || p.name.toLowerCase().includes(q.toLowerCase()))
     );
-  }, [state, available, lens, posFilter, q, yourPositions]);
+    if (sort.col) {
+      const val = (p: DraftablePlayer) =>
+        sort.col === "price" ? p.fantasyPrice : sort.col === "value" ? p.valueScore : p.projFantasyPoints;
+      const sign = sort.dir === "desc" ? -1 : 1;
+      return [...list].sort((a, b) => sign * (val(a) - val(b)));
+    }
+    return list; // otherwise: the selected lens order
+  }, [state, available, lens, posFilter, q, yourPositions, sort]);
 
   // Roster buckets of the team currently on the clock (the one that receives the
   // pick) — used to block over-drafting a full G / F / C group.
@@ -156,14 +168,14 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
           </div>
         )}
 
-        {/* Host controls — admin only */}
-        {isAdmin && (
+        {/* Host controls — admin or the room owner (commissioner) */}
+        {canHost && (
           <div className="flex flex-wrap items-center gap-2">
             {room.status === "lobby" && <button className="btn-primary" onClick={() => act({ action: "start" })}><Play size={15} /> Start</button>}
             {drafting && <button className="btn-ghost" onClick={() => act({ action: "pause" })}><Pause size={15} /> Pause</button>}
             {room.status === "paused" && <button className="btn-primary" onClick={() => act({ action: "resume" })}><Play size={15} /> Resume</button>}
             {!state.complete && drafting && <button className="btn-ghost" onClick={() => act({ action: "autopick" })}><Zap size={15} /> Auto-pick</button>}
-            <button className="btn-ghost" onClick={() => act({ action: "undo" })} title="Admin undo"><RotateCcw size={15} /> Undo</button>
+            <button className="btn-ghost" onClick={() => act({ action: "undo" })} title="Undo last pick"><RotateCcw size={15} /> Undo</button>
           </div>
         )}
       </div>
@@ -205,7 +217,9 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
               <thead className="sticky top-0 bg-ink-850">
                 <tr className="border-b border-white/5">
                   <th className="th">Player</th><th className="th">Pos</th><th className="th">Team</th>
-                  <th className="th text-right">Price</th><th className="th text-right">Proj FP</th>
+                  <SortTh label="Price" col="price" sort={sort} onClick={toggleSort} />
+                  <SortTh label="Proj FP" col="projfp" sort={sort} onClick={toggleSort} />
+                  <SortTh label="Value" col="value" sort={sort} onClick={toggleSort} />
                   <th className="th">Rec</th><th className="th text-right">Action</th>
                 </tr>
               </thead>
@@ -219,6 +233,7 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
                       <td className="td text-slate-400">{p.teamShort ?? "FA"}</td>
                       <td className="td text-right stat">{p.fantasyPrice.toFixed(1)}</td>
                       <td className="td text-right stat font-bold text-white">{p.projFantasyPoints.toFixed(1)}</td>
+                      <td className="td text-right stat text-slate-300">{p.valueScore.toFixed(0)}</td>
                       <td className="td"><RecBadge rec={p.recommendation} /></td>
                       <td className="td text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -328,6 +343,16 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
         </div>
       </section>
     </>
+  );
+}
+
+function SortTh({ label, col, sort, onClick }: { label: string; col: "price" | "projfp" | "value"; sort: { col: string | null; dir: "desc" | "asc" }; onClick: (c: "price" | "projfp" | "value") => void }) {
+  const active = sort.col === col;
+  return (
+    <th className="th cursor-pointer select-none text-right hover:text-white" onClick={() => onClick(col)} title="Ταξινόμηση">
+      {label}
+      <span className={clsx("ml-0.5", active ? "text-brand-400" : "text-slate-600")}>{active ? (sort.dir === "desc" ? "↓" : "↑") : "↕"}</span>
+    </th>
   );
 }
 

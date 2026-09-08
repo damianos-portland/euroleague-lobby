@@ -133,6 +133,27 @@ export function roundAndPick(overall: number, numParticipants: number) {
   };
 }
 
+// --- Fantasy roster buckets (the game's G / F / C slots) --------------------
+// Each team fills 5 Guards, 5 Forwards, 3 Centers (13 total). Our finer
+// PG/SG/SF/PF/C map onto these three buckets.
+export type FantasyBucket = "G" | "F" | "C";
+export const ROSTER_LIMITS: Record<FantasyBucket, number> = { G: 5, F: 5, C: 3 };
+export const BUCKET_LABEL: Record<FantasyBucket, string> = { G: "Guards", F: "Forwards", C: "Centers" };
+
+export function fantasyBucket(position: string): FantasyBucket {
+  if (position === "PG" || position === "SG") return "G";
+  if (position === "SF" || position === "PF") return "F";
+  return "C";
+}
+export function bucketCounts(positions: string[]): Record<FantasyBucket, number> {
+  const c: Record<FantasyBucket, number> = { G: 0, F: 0, C: 0 };
+  for (const p of positions) c[fantasyBucket(p)]++;
+  return c;
+}
+export function bucketFull(positions: string[], bucket: FantasyBucket): boolean {
+  return bucketCounts(positions)[bucket] >= ROSTER_LIMITS[bucket];
+}
+
 export function totalPicks(numParticipants: number, rounds: number): number {
   return numParticipants * rounds;
 }

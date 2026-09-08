@@ -50,9 +50,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         if (!body.playerId) throw new Error("playerId required");
         if (!isAdmin) {
           const oc = await onClockParticipant(roomId);
-          if (!oc || oc.userId !== uid) return forbidden();
+          // Allow the on-clock user, or anyone when the slot is unassigned (hotseat).
+          if (!oc || (oc.userId != null && oc.userId !== uid)) return forbidden();
         }
-        await makePick(roomId, body.playerId);
+        await makePick(roomId, body.playerId, { expectParticipantId: body.expectParticipantId });
         break;
       }
       case "autopick": {

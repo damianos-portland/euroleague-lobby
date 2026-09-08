@@ -11,6 +11,10 @@ import {
   parseRoundOrders,
   roundAndPick,
   totalPicks,
+  fantasyBucket,
+  bucketFull,
+  ROSTER_LIMITS,
+  BUCKET_LABEL,
   requiredPositionsRemaining,
   advise,
   autoPick as pickBest,
@@ -137,8 +141,15 @@ export async function onClockParticipant(roomId: string) {
   return room.participants.find((p) => p.draftOrder === seat) ?? null;
 }
 
-// Make a pick for the participant currently on the clock (or a specified one).
-export async function makePick(roomId: string, playerId: string, opts: { auto?: boolean } = {}) {
+// Make a pick for the participant currently on the clock. `expectParticipantId`
+// (the slot the client BELIEVED was on the clock) guards against a stale screen
+// / race: if the turn has since advanced, the pick is rejected instead of
+// silently landing on a different team.
+export async function makePick(
+  roomId: string,
+  playerId: string,
+  opts: { auto?: boolean; expectParticipantId?: string } = {}
+) {
   const room = await prisma.draftRoom.findUnique({
     where: { id: roomId },
     include: { participants: { orderBy: { draftOrder: "asc" } }, picks: true },
@@ -156,6 +167,23 @@ export async function makePick(roomId: string, playerId: string, opts: { auto?: 
   const orderIdx = seatForPick(room.currentPickIndex, n, roundOrders);
   const participant = room.participants.find((p) => p.draftOrder === orderIdx);
   if (!participant) throw new Error("No participant on the clock");
+
+  // Stale-screen guard: the client sent the slot it thought was on the clock.
+  if (opts.expectParticipantId && opts.expectParticipantId !== participant.id) {
+    throw new Error("Η σειρά άλλαξε — ανανεώνεται, δοκίμασε ξανά.");
+  }
+
+  // Enforce the fantasy roster shape: 5 Guards / 5 Forwards / 3 Centers.
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { position: true } });
+  if (!player) throw new Error("Player not found");
+  const myPicks = await prisma.draftPick.findMany({
+    where: { roomId, participantId: participant.id },
+    select: { player: { select: { position: true } } },
+  });
+  const bucket = fantasyBucket(player.position);
+  if (bucketFull(myPicks.map((p) => p.player.position), bucket)) {
+    throw new Error(`Γεμάτη θέση ${BUCKET_LABEL[bucket]} (${ROSTER_LIMITS[bucket]}/${ROSTER_LIMITS[bucket]})`);
+  }
 
   const { round, pickInRound } = roundAndPick(room.currentPickIndex, n);
   await prisma.draftPick.create({

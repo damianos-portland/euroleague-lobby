@@ -6,8 +6,8 @@ import Link from "next/link";
 import clsx from "clsx";
 import { PageHeader } from "@/components/PageHeader";
 import { PosBadge, RecBadge } from "@/components/ui";
-import { advise, AdviceKind, DraftablePlayer, gradeRoster } from "@/lib/draft";
-import { POSITIONS, Position } from "@/lib/types";
+import { advise, AdviceKind, DraftablePlayer, gradeRoster, fantasyBucket, bucketCounts, ROSTER_LIMITS, FantasyBucket } from "@/lib/draft";
+import { Position } from "@/lib/types";
 import {
   Play, Pause, RotateCcw, Zap, ListPlus, ArrowLeft, Search, Trophy,
 } from "lucide-react";
@@ -60,7 +60,7 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   // Initial load + polling for sync.
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 2500);
+    const id = setInterval(refresh, 1200); // tight sync so the on-clock team stays fresh
     return () => clearInterval(id);
   }, [refresh]);
 
@@ -78,8 +78,11 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
 
   // It's genuinely your turn only when *your own* slot is on the clock.
   const yourTurn = !!(onClockId && myParticipant && onClockId === myParticipant.id);
-  // Who may submit the pick: the on-clock user, or any admin.
-  const canPick = isAdmin || yourTurn;
+  // A slot with no assigned user = a "hotseat" team anyone present can draft for.
+  const onClockUnassigned = !!(onClockParticipant && !onClockParticipant.userId);
+  // Who may submit the pick: the on-clock user, any admin, or (hotseat) anyone
+  // when nobody owns the on-clock slot.
+  const canPick = isAdmin || yourTurn || onClockUnassigned;
 
   // CPU auto-advance: when a bot is on the clock, pick automatically.
   useEffect(() => {
@@ -103,10 +106,16 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
     const list = advise(available, yourPositions, state.room.rosterSlots, lens, 200);
     return list.filter(
       (p) =>
-        (posFilter === "ALL" || p.position === posFilter) &&
+        (posFilter === "ALL" || fantasyBucket(p.position) === posFilter) &&
         (!q || p.name.toLowerCase().includes(q.toLowerCase()))
     );
   }, [state, available, lens, posFilter, q, yourPositions]);
+
+  // Roster buckets of the team currently on the clock (the one that receives the
+  // pick) — used to block over-drafting a full G / F / C group.
+  const clockBuckets = bucketCounts((onClockParticipant?.roster ?? []).map((r: DraftablePlayer) => r.position));
+  const bucketFullFor = (pos: string) =>
+    clockBuckets[fantasyBucket(pos)] >= ROSTER_LIMITS[fantasyBucket(pos)];
 
   if (!state) {
     return <div className="py-20 text-center text-slate-400">Φόρτωση draft room…</div>;
@@ -171,7 +180,9 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
               </div>
               <select className="input py-1.5 text-xs" value={posFilter} onChange={(e) => setPosFilter(e.target.value)}>
                 <option value="ALL" className="bg-ink-850">Όλες θέσεις</option>
-                {POSITIONS.map((p) => <option key={p} value={p} className="bg-ink-850">{p}</option>)}
+                <option value="G" className="bg-ink-850">Guards (G)</option>
+                <option value="F" className="bg-ink-850">Forwards (F)</option>
+                <option value="C" className="bg-ink-850">Centers (C)</option>
               </select>
             </div>
           </div>
@@ -220,17 +231,19 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
                           </button>
                           <button
                             className="btn-primary !px-2.5 !py-1 text-xs disabled:opacity-40"
-                            disabled={!drafting || !canPick || busy}
+                            disabled={!drafting || !canPick || busy || bucketFullFor(p.position)}
                             title={
                               !drafting
                                 ? "Το draft δεν είναι σε εξέλιξη"
+                                : bucketFullFor(p.position)
+                                ? `Γεμάτη θέση ${fantasyBucket(p.position)} για ${state.onTheClock?.teamName ?? ""}`
                                 : canPick
                                 ? isAdmin && !yourTurn
                                   ? `Draft για ${state.onTheClock?.teamName ?? "on-clock"} (admin)`
                                   : "Κάνε το pick σου"
                                 : "Δεν είναι η σειρά σου"
                             }
-                            onClick={() => act({ action: "pick", playerId: p.id })}
+                            onClick={() => act({ action: "pick", playerId: p.id, expectParticipantId: onClockId })}
                           >
                             Draft
                           </button>
@@ -249,9 +262,10 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
         <div className="space-y-5">
           <section className="card card-pad">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-white">Το roster σου</h2>
+              <h2 className="text-sm font-bold text-white">{you?.teamName ?? "Roster"}</h2>
               <span className="chip bg-white/5 text-slate-300">Grade {you?.grade.grade}</span>
             </div>
+            <BucketSlots roster={you?.roster ?? []} />
             <RosterNeeds participant={you} />
             <ul className="mt-3 space-y-1.5">
               {(you?.roster ?? []).map((p: DraftablePlayer, i: number) => (
@@ -314,6 +328,26 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
         </div>
       </section>
     </>
+  );
+}
+
+function BucketSlots({ roster }: { roster: DraftablePlayer[] }) {
+  const counts = bucketCounts(roster.map((r) => r.position));
+  const items: [FantasyBucket, string][] = [["G", "Guards"], ["F", "Forwards"], ["C", "Centers"]];
+  return (
+    <div className="mb-3 grid grid-cols-3 gap-2">
+      {items.map(([b, label]) => {
+        const cur = counts[b];
+        const max = ROSTER_LIMITS[b];
+        const full = cur >= max;
+        return (
+          <div key={b} className={clsx("rounded-lg border px-2.5 py-1.5 text-center", full ? "border-emerald-500/30 bg-emerald-500/10" : "border-white/5 bg-white/[0.03]")}>
+            <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
+            <div className={clsx("stat text-sm font-bold tabular-nums", full ? "text-emerald-400" : "text-white")}>{cur}/{max}</div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

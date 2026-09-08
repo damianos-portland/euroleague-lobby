@@ -23,6 +23,7 @@ import {
   Crosshair,
 } from "lucide-react";
 import { useState } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface NavItem {
   href: string;
@@ -85,9 +86,12 @@ export function Sidebar({ user }: { user: SidebarUser }) {
       {/* Mobile top bar */}
       <div className="sticky top-0 z-40 flex items-center justify-between border-b border-white/5 bg-ink-950/80 px-4 py-3 backdrop-blur md:hidden">
         <Brand />
-        <button className="btn-ghost !p-2" onClick={() => setOpen((v) => !v)} aria-label="Menu">
-          {open ? <X size={18} /> : <Menu size={18} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle className="!px-2" />
+          <button className="btn-ghost !p-2" onClick={() => setOpen((v) => !v)} aria-label="Menu">
+            {open ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </div>
 
       <aside
@@ -143,12 +147,15 @@ export function Sidebar({ user }: { user: SidebarUser }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="btn-ghost mt-2.5 w-full justify-center !py-1.5 text-xs"
-          >
-            <LogOut size={14} /> Αποσύνδεση
-          </button>
+          <div className="mt-2.5 flex gap-2">
+            <ThemeToggle className="flex-1" />
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="btn-ghost flex-1 justify-center !py-1.5 text-xs"
+            >
+              <LogOut size={14} /> Έξοδος
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -162,7 +169,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2.5">
-      <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 font-black text-white shadow-glow">
+      <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 font-black text-[#fff] shadow-glow">
         EL
       </div>
       <div className="leading-tight">

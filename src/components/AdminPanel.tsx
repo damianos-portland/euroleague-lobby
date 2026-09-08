@@ -339,7 +339,7 @@ function ImportBox({ onDone }: { onDone: (m: string) => void }) {
       <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-white"><Upload size={16} className="text-brand-400" /> Import CSV / JSON</h2>
       <div className="mb-2 flex gap-1.5">
         {(["csv", "json"] as const).map((f) => (
-          <button key={f} className={`chip ${format === f ? "bg-brand-500 text-white" : "bg-white/5 text-slate-300"}`} onClick={() => setFormat(f)}>{f.toUpperCase()}</button>
+          <button key={f} className={`chip ${format === f ? "bg-brand-500 text-[#fff]" : "bg-white/5 text-slate-300"}`} onClick={() => setFormat(f)}>{f.toUpperCase()}</button>
         ))}
       </div>
       <textarea className="input min-h-[120px] w-full font-mono text-[11px]" value={payload} onChange={(e) => setPayload(e.target.value)} />

@@ -4,13 +4,58 @@
 
 :root {
   color-scheme: dark;
+  --fg: 255 255 255;
+  --slate-50: 248 250 252;
+  --slate-100: 241 245 249;
+  --slate-200: 226 232 240;
+  --slate-300: 203 213 225;
+  --slate-400: 148 163 184;
+  --slate-500: 100 116 139;
+  --slate-600: 71 85 105;
+  --slate-700: 51 65 85;
+  --slate-800: 30 41 59;
+  --slate-900: 15 23 42;
+  --ink-950: 8 11 18;
+  --ink-900: 11 15 28;
+  --ink-850: 15 20 36;
+  --ink-800: 20 26 46;
+  --ink-750: 26 33 56;
+  --ink-700: 34 43 69;
+  --ink-600: 46 58 92;
+  --glow: rgba(227, 82, 5, 0.07);
+  --scroll: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --fg: 17 24 39; /* primary text + light overlays → near-black navy */
+  /* slate inverts: prominent shades go dark, faint shades go light */
+  --slate-50: 15 23 42;
+  --slate-100: 15 23 42;
+  --slate-200: 30 41 59;
+  --slate-300: 51 65 85;
+  --slate-400: 71 85 105; /* muted body text with real contrast on white */
+  --slate-500: 100 116 139;
+  --slate-600: 148 163 184; /* faint */
+  --slate-700: 203 213 225;
+  --slate-800: 226 232 240;
+  --slate-900: 241 245 249;
+  --ink-950: 244 246 250; /* page base */
+  --ink-900: 255 255 255; /* inputs */
+  --ink-850: 249 250 253;
+  --ink-800: 241 244 249;
+  --ink-750: 233 237 244;
+  --ink-700: 224 229 238;
+  --ink-600: 209 215 228;
+  --glow: rgba(227, 82, 5, 0.06);
+  --scroll: rgba(15, 20, 36, 0.18);
 }
 
 html,
 body {
-  background: radial-gradient(1000px 500px at 85% -10%, rgba(227, 82, 5, 0.07), transparent 60%),
-    #080b12;
-  color: #e7ecf5;
+  background: radial-gradient(1000px 500px at 85% -10%, var(--glow), transparent 60%),
+    rgb(var(--ink-950));
+  color: rgb(var(--slate-100));
 }
 
 @layer components {
@@ -30,7 +75,8 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-brand-500 text-white hover:bg-brand-600 shadow-glow;
+    @apply btn bg-brand-500 hover:bg-brand-600 shadow-glow;
+    color: #fff; /* stays white on orange in both themes */
   }
   .btn-ghost {
     @apply btn border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10;
@@ -67,7 +113,7 @@ body {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scroll);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-track {

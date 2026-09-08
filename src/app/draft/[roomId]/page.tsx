@@ -29,6 +29,7 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   const [lens, setLens] = useState<AdviceKind>("best");
   const [q, setQ] = useState("");
   const [posFilter, setPosFilter] = useState<string>("ALL");
+  const [pendingPick, setPendingPick] = useState<DraftablePlayer | null>(null);
   type SortCol = "price" | "projfp" | "value";
   const [sort, setSort] = useState<{ col: SortCol | null; dir: "desc" | "asc" }>({ col: null, dir: "desc" });
   const toggleSort = (col: SortCol) =>
@@ -205,7 +206,7 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
               <button
                 key={l.key}
                 onClick={() => setLens(l.key)}
-                className={clsx("chip transition", lens === l.key ? "bg-brand-500 text-white" : "bg-white/5 text-slate-300 hover:bg-white/10")}
+                className={clsx("chip transition", lens === l.key ? "bg-brand-500 text-[#fff]" : "bg-white/5 text-slate-300 hover:bg-white/10")}
               >
                 {l.label}
               </button>
@@ -258,7 +259,7 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
                                   : "Κάνε το pick σου"
                                 : "Δεν είναι η σειρά σου"
                             }
-                            onClick={() => act({ action: "pick", playerId: p.id, expectParticipantId: onClockId })}
+                            onClick={() => setPendingPick(p)}
                           >
                             Draft
                           </button>
@@ -342,6 +343,43 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
             ))}
         </div>
       </section>
+
+      {/* Pick confirmation — critical on mobile where the Draft button and the
+          player name can be far apart while scrolling the table sideways. */}
+      {pendingPick && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center"
+          onClick={() => setPendingPick(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="card card-pad w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm text-slate-400">Σίγουρα θες να διαλέξεις;</p>
+            <div className="mt-2 flex items-center gap-2">
+              <PosBadge pos={pendingPick.position} />
+              <span className="text-lg font-extrabold text-white">{pendingPick.name}</span>
+            </div>
+            <div className="mt-1 text-xs text-slate-400">
+              {pendingPick.teamShort ?? "FA"} · {pendingPick.projFantasyPoints.toFixed(1)} proj FP · {pendingPick.fantasyPrice.toFixed(1)}cr
+              <span className="ml-1 text-slate-500">→ {state.onTheClock?.teamName}</span>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button className="btn-ghost flex-1" onClick={() => setPendingPick(null)}>Άκυρο</button>
+              <button
+                className="btn-primary flex-1"
+                disabled={busy}
+                onClick={() => {
+                  const id = pendingPick.id;
+                  setPendingPick(null);
+                  act({ action: "pick", playerId: id, expectParticipantId: onClockId });
+                }}
+              >
+                Επιβεβαίωση pick
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

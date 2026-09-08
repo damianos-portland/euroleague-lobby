@@ -5,15 +5,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // EuroLeague-inspired dark palette
+        // Neutrals are CSS-variable-backed so the whole app flips between the
+        // dark (default) and light themes without touching component classes.
+        // `white` = the primary foreground token (dark text in light theme), so
+        // text-white / bg-white/[opacity] / border-white/[opacity] all adapt.
+        white: "rgb(var(--fg) / <alpha-value>)",
+        slate: {
+          50: "rgb(var(--slate-50) / <alpha-value>)",
+          100: "rgb(var(--slate-100) / <alpha-value>)",
+          200: "rgb(var(--slate-200) / <alpha-value>)",
+          300: "rgb(var(--slate-300) / <alpha-value>)",
+          400: "rgb(var(--slate-400) / <alpha-value>)",
+          500: "rgb(var(--slate-500) / <alpha-value>)",
+          600: "rgb(var(--slate-600) / <alpha-value>)",
+          700: "rgb(var(--slate-700) / <alpha-value>)",
+          800: "rgb(var(--slate-800) / <alpha-value>)",
+          900: "rgb(var(--slate-900) / <alpha-value>)",
+        },
         ink: {
-          950: "#080b12",
-          900: "#0b0f1c",
-          850: "#0f1424",
-          800: "#141a2e",
-          750: "#1a2138",
-          700: "#222b45",
-          600: "#2e3a5c",
+          950: "rgb(var(--ink-950) / <alpha-value>)",
+          900: "rgb(var(--ink-900) / <alpha-value>)",
+          850: "rgb(var(--ink-850) / <alpha-value>)",
+          800: "rgb(var(--ink-800) / <alpha-value>)",
+          750: "rgb(var(--ink-750) / <alpha-value>)",
+          700: "rgb(var(--ink-700) / <alpha-value>)",
+          600: "rgb(var(--ink-600) / <alpha-value>)",
         },
         brand: {
           DEFAULT: "#ff5a1f", // EuroLeague orange

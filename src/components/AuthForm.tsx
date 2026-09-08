@@ -27,7 +27,7 @@ function Shell({ title, sub, children }: { title: string; sub: string; children:
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 font-black text-white shadow-glow">
+          <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 font-black text-[#fff] shadow-glow">
             EL
           </div>
           <h1 className="text-xl font-extrabold tracking-tight text-white">{title}</h1>

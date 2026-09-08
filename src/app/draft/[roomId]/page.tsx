@@ -353,7 +353,10 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
           role="dialog"
           aria-modal="true"
         >
-          <div className="card card-pad w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="card-pad w-full max-w-sm rounded-2xl border border-white/10 bg-ink-850 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <p className="text-sm text-slate-400">Σίγουρα θες να διαλέξεις;</p>
             <div className="mt-2 flex items-center gap-2">
               <PosBadge pos={pendingPick.position} />

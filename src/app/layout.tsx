@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
+import { PasskeyPrompt } from "@/components/PasskeyPrompt";
 import { auth } from "@/auth";
 
 const inter = Inter({ subsets: ["latin", "greek"], variable: "--font-sans" });
@@ -49,6 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main className="md:pl-64">
               <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">{children}</div>
             </main>
+            <PasskeyPrompt />
           </>
         ) : (
           // Unauthenticated: only /login and /signup render here (middleware

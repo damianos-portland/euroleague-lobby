@@ -63,6 +63,9 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
       <form onSubmit={submit} className="space-y-3">
         <input className="input w-full" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
         <input className="input w-full" type="password" placeholder="Κωδικός" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+        <div className="text-right">
+          <Link href="/forgot" className="text-xs font-medium text-slate-400 hover:text-brand-400">Ξέχασες τον κωδικό;</Link>
+        </div>
         {error && <p className="text-xs text-rose-400">{error}</p>}
         <button className="btn-primary w-full justify-center" type="submit" disabled={busy}>
           {busy ? "Σύνδεση…" : "Σύνδεση"}
@@ -138,6 +141,110 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         Έχεις ήδη λογαριασμό?{" "}
         <Link href="/login" className="font-semibold text-brand-400 hover:underline">Σύνδεση</Link>
       </p>
+    </Shell>
+  );
+}
+
+// --- Forgot password: request a reset link by email --------------------------
+export function ForgotForm() {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    await fetch("/api/password/forgot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    }).catch(() => {});
+    // Always show the same confirmation (no account enumeration).
+    setSent(true);
+    setBusy(false);
+  }
+
+  return (
+    <Shell title="Επαναφορά κωδικού" sub="Θα σου στείλουμε σύνδεσμο στο email">
+      {sent ? (
+        <div className="space-y-3 text-center">
+          <p className="text-sm text-slate-300">
+            Αν υπάρχει λογαριασμός με αυτό το email, έστειλα σύνδεσμο επαναφοράς. Έλεγξε και τα ανεπιθύμητα.
+          </p>
+          <Link href="/login" className="btn-ghost w-full justify-center">Πίσω στη σύνδεση</Link>
+        </div>
+      ) : (
+        <form onSubmit={submit} className="space-y-3">
+          <input className="input w-full" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+          <button className="btn-primary w-full justify-center" type="submit" disabled={busy}>
+            {busy ? "Αποστολή…" : "Στείλε σύνδεσμο επαναφοράς"}
+          </button>
+          <p className="text-center text-xs text-slate-400">
+            <Link href="/login" className="font-semibold text-brand-400 hover:underline">Πίσω στη σύνδεση</Link>
+          </p>
+        </form>
+      )}
+    </Shell>
+  );
+}
+
+// --- Reset password: set a new password from an emailed token ----------------
+export function ResetForm({ token }: { token: string }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 8) return setError("Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες.");
+    if (password !== confirm) return setError("Οι κωδικοί δεν ταιριάζουν.");
+    setBusy(true);
+    const res = await fetch("/api/password/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data?.error ?? "Κάτι πήγε στραβά.");
+      setBusy(false);
+      return;
+    }
+    setDone(true);
+    setBusy(false);
+  }
+
+  if (!token) {
+    return (
+      <Shell title="Άκυρος σύνδεσμος" sub="EuroLeague Lobby">
+        <div className="space-y-3 text-center">
+          <p className="text-sm text-slate-300">Ο σύνδεσμος επαναφοράς λείπει ή είναι λανθασμένος.</p>
+          <Link href="/forgot" className="btn-primary w-full justify-center">Ζήτησε νέο σύνδεσμο</Link>
+        </div>
+      </Shell>
+    );
+  }
+
+  return (
+    <Shell title="Νέος κωδικός" sub="Όρισε τον νέο σου κωδικό">
+      {done ? (
+        <div className="space-y-3 text-center">
+          <p className="text-sm text-emerald-300">Ο κωδικός άλλαξε. Μπορείς να συνδεθείς τώρα.</p>
+          <Link href="/login" className="btn-primary w-full justify-center">Σύνδεση</Link>
+        </div>
+      ) : (
+        <form onSubmit={submit} className="space-y-3">
+          <input className="input w-full" type="password" placeholder="Νέος κωδικός (τουλάχιστον 8 χαρακτήρες)" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" minLength={8} />
+          <input className="input w-full" type="password" placeholder="Επιβεβαίωση κωδικού" value={confirm} onChange={(e) => setConfirm(e.target.value)} required autoComplete="new-password" minLength={8} />
+          {error && <p className="text-xs text-rose-400">{error}</p>}
+          <button className="btn-primary w-full justify-center" type="submit" disabled={busy}>
+            {busy ? "Αποθήκευση…" : "Αποθήκευση νέου κωδικού"}
+          </button>
+        </form>
+      )}
     </Shell>
   );
 }

@@ -35,6 +35,22 @@ model User {
   participants DraftParticipant[]
   draftRooms   DraftRoom[]        @relation("DraftRoomOwner")
   pushSubscriptions PushSubscription[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+// Single-use password reset token. We store only the SHA-256 HASH of the token
+// (the raw token lives only in the emailed link), so a DB leak can't be used to
+// reset anyone's password. Expires after a short window.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // A single browser/device push endpoint (Web Push / VAPID). One user can have

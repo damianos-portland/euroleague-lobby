@@ -8,6 +8,7 @@ import {
   setStatus,
   loadDraftState,
   onClockParticipant,
+  notifyOnClock,
 } from "@/lib/draftServer";
 
 // Consolidated draft actions: start | pause | resume | pick | autopick | undo |
@@ -45,6 +46,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       case "resume":
         if (!isHost) return forbidden();
         await setStatus(roomId, "drafting");
+        // Notify whoever is first on the clock now that the draft is live.
+        await notifyOnClock(roomId);
         break;
       case "pause":
         if (!isHost) return forbidden();

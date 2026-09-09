@@ -6,6 +6,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import { PageHeader } from "@/components/PageHeader";
 import { PosBadge, RecBadge } from "@/components/ui";
+import { PushToggle } from "@/components/PushToggle";
 import { advise, AdviceKind, DraftablePlayer, gradeRoster, fantasyBucket, bucketCounts, ROSTER_LIMITS, FantasyBucket } from "@/lib/draft";
 import { Position } from "@/lib/types";
 import {
@@ -152,6 +153,9 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
           </div>
           <div className="mt-1 text-xs text-slate-400">
             Snake draft · {state.participants.length} ομάδες · {room.rounds} γύροι
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <PushToggle />
           </div>
         </div>
 

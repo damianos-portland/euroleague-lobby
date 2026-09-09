@@ -5,6 +5,7 @@
 
 import { prisma } from "./db";
 import { Position } from "./types";
+import { sendPushToUser } from "./push";
 import {
   DraftablePlayer,
   seatForPick,
@@ -141,6 +142,27 @@ export async function onClockParticipant(roomId: string) {
   return room.participants.find((p) => p.draftOrder === seat) ?? null;
 }
 
+// Push a "you're on the clock" notification to the participant now on the
+// clock (if the slot belongs to a real user). Best-effort; never throws.
+export async function notifyOnClock(roomId: string): Promise<void> {
+  try {
+    const oc = await onClockParticipant(roomId);
+    if (!oc || !oc.userId) return; // empty slot / CPU → nobody to notify
+    const room = await prisma.draftRoom.findUnique({
+      where: { id: roomId },
+      select: { name: true },
+    });
+    await sendPushToUser(oc.userId, {
+      title: "🟠 Είσαι στο ρολόι!",
+      body: `${room?.name ?? "Draft"} — σειρά σου να διαλέξεις παίκτη.`,
+      url: `/draft/${roomId}`,
+      tag: `draft-${roomId}-onclock`,
+    });
+  } catch {
+    /* push is best-effort — a failure must never break the draft */
+  }
+}
+
 // Make a pick for the participant currently on the clock. `expectParticipantId`
 // (the slot the client BELIEVED was on the clock) guards against a stale screen
 // / race: if the turn has since advanced, the pick is rejected instead of
@@ -201,6 +223,9 @@ export async function makePick(
     where: { id: roomId },
     data: { currentPickIndex: nextIndex, status: nextIndex >= tp ? "complete" : "drafting" },
   });
+
+  // Ping whoever is on the clock now (skip when the draft just completed).
+  if (nextIndex < tp) await notifyOnClock(roomId);
 }
 
 export async function autoPickCurrent(roomId: string) {

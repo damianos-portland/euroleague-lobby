@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   title: "EuroLeague Lobby — Fantasy & Draft 2026",
   description:
     "Premium EuroLeague fantasy analytics: rosters, projections, fantasy value engine and live snake draft.",
+  // iOS PWA: enables "Add to Home Screen" as a standalone app (prerequisite for
+  // web push on iPhone) and sets the home-screen icon.
+  appleWebApp: { capable: true, title: "EL Lobby", statusBarStyle: "black-translucent" },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

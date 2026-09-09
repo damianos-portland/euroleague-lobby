@@ -34,6 +34,23 @@ model User {
   watchlist    WatchlistItem[]
   participants DraftParticipant[]
   draftRooms   DraftRoom[]        @relation("DraftRoomOwner")
+  pushSubscriptions PushSubscription[]
+}
+
+// A single browser/device push endpoint (Web Push / VAPID). One user can have
+// many — one per browser they enabled notifications on. Keyed by endpoint so a
+// re-subscribe from the same device upserts instead of duplicating.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  ua        String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // ---------------------------------------------------------------------------

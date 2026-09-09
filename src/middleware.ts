@@ -7,6 +7,10 @@ import { authConfig } from "@/auth.config";
 export default NextAuth(authConfig).auth;
 
 export const config = {
-  // Run on everything except Next internals and static asset files.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp)$).*)"],
+  // Run on everything except Next internals, static asset files, and the
+  // PWA/push essentials (service worker + manifest) which MUST be publicly
+  // fetchable for notifications to register.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp)$).*)",
+  ],
 };

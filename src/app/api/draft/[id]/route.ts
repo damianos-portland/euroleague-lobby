@@ -7,7 +7,9 @@ import { requireAdmin } from "@/lib/authz";
 // Full draft state (+ optional advice for ?participant=ID). `viewer` tells the
 // client who is watching, so it can show controls only for their own slot.
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const state = await loadDraftState(params.id);
+  // Polls pass ?pool=0 to skip the heavy available-players list (client caches it).
+  const includePool = req.nextUrl.searchParams.get("pool") !== "0";
+  const state = await loadDraftState(params.id, includePool);
   if (!state) return NextResponse.json({ error: "Room not found" }, { status: 404 });
 
   const session = await auth();

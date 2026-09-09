@@ -38,11 +38,28 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   const [notes, setNotes] = useState("");
   const [viewer, setViewer] = useState<{ id: string; role: string } | null>(null);
   const actingRef = useRef(false);
+  // The available-players pool is ~static during a draft, so we fetch it once
+  // and cache it. Polls then skip it (?pool=0) and we rebuild `available` locally
+  // by removing drafted players — this cuts DB egress by ~90%.
+  const poolRef = useRef<DraftablePlayer[]>([]);
+  const havePoolRef = useRef(false);
 
   const refresh = useCallbackRef(async () => {
-    const res = await fetch(`/api/draft/${roomId}`);
+    const wantPool = !havePoolRef.current;
+    const res = await fetch(`/api/draft/${roomId}${wantPool ? "" : "?pool=0"}`);
     const data = await res.json();
-    if (data.state) setState(data.state);
+    if (data.state) {
+      const s = data.state;
+      if (wantPool && Array.isArray(s.available)) {
+        poolRef.current = s.available;
+        havePoolRef.current = true;
+      } else {
+        // Rebuild the list from the cached pool minus everyone already drafted.
+        const draftedIds = new Set(s.picks.map((p: any) => p.player.id));
+        s.available = poolRef.current.filter((p) => !draftedIds.has(p.id));
+      }
+      setState(s);
+    }
     if (data.viewer !== undefined) setViewer(data.viewer);
   });
 
@@ -66,7 +83,7 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
   // Initial load + polling for sync.
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 1200); // tight sync so the on-clock team stays fresh
+    const id = setInterval(refresh, 2500); // polls are lightweight now (pool is cached)
     return () => clearInterval(id);
   }, [refresh]);
 

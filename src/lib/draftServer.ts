@@ -39,29 +39,54 @@ function toDraftable(p: any): DraftablePlayer {
   };
 }
 
-export async function loadDraftState(roomId: string) {
+// Only the columns toDraftable actually needs — fetching the full rows (all
+// player/team/projection columns) on every poll is what blew the DB egress.
+const PLAYER_SELECT = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  position: true,
+  fantasyPrice: true,
+  team: { select: { shortName: true } },
+  projection: {
+    select: {
+      projFantasyPoints: true,
+      valueScore: true,
+      upsideScore: true,
+      consistencyScore: true,
+      riskAdjustedValue: true,
+      recommendation: true,
+    },
+  },
+} as const;
+
+// `includePool` controls whether the (large, ~static) available-players list is
+// loaded. The client fetches it once and caches it; polls pass includePool=false
+// so each poll only carries the small live state (picks / on-the-clock / rosters).
+export async function loadDraftState(roomId: string, includePool = true) {
   const room = await prisma.draftRoom.findUnique({
     where: { id: roomId },
     include: {
       participants: { orderBy: { draftOrder: "asc" } },
       picks: {
         orderBy: { overall: "asc" },
-        include: { player: { include: { team: true, projection: true } }, participant: true },
+        include: { player: { select: PLAYER_SELECT }, participant: true },
       },
       queueItems: {
         orderBy: { rank: "asc" },
-        include: { player: { include: { team: true, projection: true } } },
+        include: { player: { select: PLAYER_SELECT } },
       },
     },
   });
   if (!room) return null;
 
-  const allPlayers = await prisma.player.findMany({ include: { team: true, projection: true } });
   const draftedIds = new Set(room.picks.map((p) => p.playerId));
-  const available = allPlayers
-    .filter((p) => !draftedIds.has(p.id))
-    .map(toDraftable)
-    .sort((a, b) => b.projFantasyPoints - a.projFantasyPoints);
+  const available = includePool
+    ? (await prisma.player.findMany({ select: PLAYER_SELECT }))
+        .filter((p) => !draftedIds.has(p.id))
+        .map(toDraftable)
+        .sort((a, b) => b.projFantasyPoints - a.projFantasyPoints)
+    : [];
 
   const n = room.participants.length;
   const tp = totalPicks(n, room.rounds);

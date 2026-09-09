@@ -16,7 +16,8 @@ export const authConfig = {
         pathname === "/reset" ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/signup") ||
-        pathname.startsWith("/api/password");
+        pathname.startsWith("/api/password") ||
+        pathname.startsWith("/api/passkey/login");
       if (isPublic) return true;
       return !!auth?.user; // false → NextAuth redirects to signIn page
     },

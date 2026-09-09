@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { PasskeyLoginButton } from "./PasskeyLoginButton";
 
 function GoogleButton({ label }: { label: string }) {
   return (
@@ -71,14 +72,11 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           {busy ? "Σύνδεση…" : "Σύνδεση"}
         </button>
       </form>
-      {googleEnabled && (
-        <>
-          <div className="my-4 flex items-center gap-3 text-[11px] text-slate-500">
-            <div className="h-px flex-1 bg-white/10" /> ή <div className="h-px flex-1 bg-white/10" />
-          </div>
-          <GoogleButton label="Σύνδεση με Google" />
-        </>
-      )}
+      <div className="my-4 flex items-center gap-3 text-[11px] text-slate-500">
+        <div className="h-px flex-1 bg-white/10" /> ή <div className="h-px flex-1 bg-white/10" />
+      </div>
+      <PasskeyLoginButton />
+      {googleEnabled && <div className="mt-3"><GoogleButton label="Σύνδεση με Google" /></div>}
       <p className="mt-4 text-center text-xs text-slate-400">
         Δεν έχεις λογαριασμό?{" "}
         <Link href="/signup" className="font-semibold text-brand-400 hover:underline">Εγγραφή</Link>

@@ -36,6 +36,24 @@ model User {
   draftRooms   DraftRoom[]        @relation("DraftRoomOwner")
   pushSubscriptions PushSubscription[]
   passwordResetTokens PasswordResetToken[]
+  authenticators Authenticator[]
+}
+
+// A registered WebAuthn passkey (Face ID / Touch ID / Windows Hello / security
+// key). publicKey is the raw COSE key bytes; counter guards against cloned-
+// authenticator replay. One user can register many.
+model Authenticator {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialID String   @unique          // base64url
+  publicKey    Bytes                       // COSE public key
+  counter      Int      @default(0)
+  transports   String?                     // csv, e.g. "internal,hybrid"
+  deviceName   String?                     // user-facing label
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
 }
 
 // Single-use password reset token. We store only the SHA-256 HASH of the token

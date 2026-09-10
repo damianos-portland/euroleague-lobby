@@ -182,6 +182,38 @@ function buildRationale(x: {
   return `${labelMap[x.recommendation]} · ${x.signal.toUpperCase()} — ${parts.join(", ")}.`;
 }
 
+// Floor / ceiling: the fantasy range a player produces on a COLD vs a HOT game,
+// around the mean projection. The game-to-game swing is wider for streaky
+// profiles (high usage, youth) and tighter for steady ones (heavy minutes,
+// high consistency). Ceiling is asymmetric — hot nights spike harder — and
+// high-upside players get a bit more headroom. Pure function of fields we
+// already have, so no stored columns needed.
+export function fpRange(
+  proj: {
+    projFantasyPoints: number;
+    projMinutes: number;
+    projUsage: number;
+    consistencyScore: number;
+    upsideScore: number;
+  },
+  age: number
+): { floor: number; mean: number; ceiling: number; swing: number } {
+  const mean = proj.projFantasyPoints;
+  let swing = 0.32; // baseline ±32% game-to-game
+  swing += (proj.projUsage - 20) * 0.004; // ball-dominant → streakier
+  swing += age <= 23 ? 0.05 : age >= 32 ? -0.02 : 0; // young = boom/bust
+  swing -= (proj.projMinutes - 20) * 0.004; // heavy minutes = steadier
+  swing -= (proj.consistencyScore - 50) * 0.001; // proven consistency tightens it
+  swing = clamp(swing, 0.18, 0.55);
+  const hotMult = 1.25 + proj.upsideScore / 1000; // upside stretches the ceiling
+  return {
+    floor: round1(Math.max(0, mean * (1 - swing))),
+    mean: round1(mean),
+    ceiling: round1(mean * (1 + swing * hotMult)),
+    swing: round1(swing),
+  };
+}
+
 // Convenience: derive a simple risk level bucket for badges.
 export function riskLevel(injuryRisk: number, consistencyScore: number): "low" | "medium" | "high" {
   const composite = injuryRisk * 0.6 + (100 - consistencyScore) * 0.4;

@@ -22,6 +22,7 @@ import {
   Dice5,
   Crosshair,
   Settings,
+  Flame,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
@@ -40,6 +41,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { href: "/", label: "Lobby", icon: LayoutDashboard },
       { href: "/projections", label: "Projections", icon: LineChart },
       { href: "/value", label: "Value Engine", icon: Gauge },
+      { href: "/range", label: "Hot / Cold", icon: Flame },
       { href: "/scout", label: "Scout", icon: Crosshair },
     ],
   },

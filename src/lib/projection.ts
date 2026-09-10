@@ -12,7 +12,6 @@
 import {
   ProjectionInput,
   ProjectionOutput,
-  computeFantasyPoints,
   clamp,
   round1,
   DepthRole,
@@ -124,17 +123,15 @@ export function projectPlayer(input: ProjectionInput): ProjectionOutput {
   // Turnovers rise with usage but we keep them as a cost.
   const projTurnovers = base.turnovers * minutesRatio * usageMult;
 
-  const projFantasyPoints = computeFantasyPoints({
-    points: projPoints,
-    rebounds: projRebounds,
-    assists: projAssists,
-    steals: projSteals,
-    blocks: projBlocks,
-    turnovers: projTurnovers,
-  });
-
-  // PIR projection scales with minutes & efficiency, anchored to history.
+  // PIR projection scales with minutes & efficiency, anchored to real history.
   const projPir = base.pir * minutesRatio * paceMult * age * (0.5 + usageShare * 0.5);
+
+  // Official EuroLeague Fantasy score = PIR, plus a +10% Team Win Bonus for any
+  // round the player's team wins. For a season projection we apply the EXPECTED
+  // win bonus, derived from the team's strength (net rating → win probability).
+  const netRating = input.team.offRating - input.team.defRating;
+  const winProb = clamp(1 / (1 + Math.exp(-netRating / 6)), 0.2, 0.8);
+  const projFantasyPoints = projPir * (1 + 0.1 * winProb);
 
   const projectedRole = describeRole(input, projMinutes);
 

@@ -28,10 +28,10 @@ export interface ValueInput {
 }
 
 // Normalisation anchor, calibrated to the actual league distribution of
-// projected FP-per-credit under the REAL fantasy credits (median ≈ 1.2,
-// p90 ≈ 1.8). Anchoring "fair" at the median so an average player scores ~50
-// and elites (≈1.8) score ~75.
-const FAIR_PPC = 1.2; // projected FP per credit = an average value play
+// projected FP-per-credit under the REAL fantasy credits and the PIR-based FP
+// (measured median ≈ 1.00, p90 ≈ 1.21). Anchoring "fair" at the median so an
+// average player scores ~50 and elites (≈1.21) score ~60.
+const FAIR_PPC = 1.0; // projected FP (PIR) per credit = an average value play
 
 export function evaluateValue(input: ValueInput): ValueOutput {
   const fp = input.projection.projFantasyPoints;
@@ -81,7 +81,7 @@ export function evaluateValue(input: ValueInput): ValueOutput {
   const ownershipPrediction = clamp(
     round1(
       valueScore * 0.4 +
-        Math.min(fp, 30) * 1.4 +
+        Math.min(fp, 20) * 2.2 +
         (input.fantasyPrice >= 9 ? 18 : 0) +
         consistencyScore * 0.15
     ),
@@ -133,15 +133,15 @@ function recommend(
   fp: number,
   projMinutes: number
 ): Recommendation {
+  // Thresholds are on the PIR scale (fp = projected PIR ± win bonus).
   // Won't see the floor → not a fantasy asset, regardless of efficiency.
-  if (projMinutes < 12 || fp < 6) return "avoid";
-  // Premium: elite production is a roster anchor even at a premium price —
-  // a big scorer with at-least-fair value is never an "avoid".
-  if (fp >= 24 || (fp >= 19 && valueScore >= 48)) return "premium_pick";
-  // Value: efficient points-per-credit, or a solid producer at good value.
-  if (valueScore >= 62 || (valueScore >= 50 && fp >= 12)) return "value_pick";
+  if (projMinutes < 12 || fp < 4) return "avoid";
+  // Premium: elite PIR is a roster anchor even at a premium price.
+  if (fp >= 16 || (fp >= 12 && valueScore >= 48)) return "premium_pick";
+  // Value: efficient PIR-per-credit, or a solid producer at good value.
+  if (valueScore >= 62 || (valueScore >= 50 && fp >= 8)) return "value_pick";
   // Watchlist: real role with upside or above-average value.
-  if (upside >= 58 || valueScore >= 45 || fp >= 12) return "watchlist";
+  if (upside >= 58 || valueScore >= 45 || fp >= 8) return "watchlist";
   return "avoid";
 }
 

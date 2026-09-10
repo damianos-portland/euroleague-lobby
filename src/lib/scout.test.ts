@@ -34,7 +34,8 @@ describe("faststart eligibility gate", () => {
     expect(fitScore(smallSample, "faststart")).toBe(NEG);
   });
   it("excludes low projected producers (must actually start strong)", () => {
-    const weak = mk({ price: 6, depthRole: "starter", proj: { ...mk({ price: 6 }).proj!, projFantasyPoints: 8 } });
+    // PIR scale: floor is projFP >= 6, so a sub-6 producer is excluded.
+    const weak = mk({ price: 6, depthRole: "starter", proj: { ...mk({ price: 6 }).proj!, projFantasyPoints: 4 } });
     expect(fitScore(weak, "faststart")).toBe(NEG);
   });
   it("a proven rotation starter with real minutes is eligible", () => {

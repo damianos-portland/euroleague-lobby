@@ -29,9 +29,11 @@ function creditBaselineLine(credit: number, position: Position): SeasonStatLine 
     blocks: Math.round(fp * (isC ? 0.05 : 0.02) * 10) / 10,
     turnovers: Math.round(fp * 0.1 * 10) / 10,
     usage: Math.max(14, Math.min(30, Math.round(12 + credit))),
-    pir: Math.round(fp * 0.95 * 10) / 10,
-    fantasyPoints: fp,
-    fpStdev: Math.round(fp * 0.35 * 10) / 10,
+    // PIR (fantasy) base ≈ the credit itself — credits are derived from real
+    // valuation, so a ~15cr player ≈ PIR 14. Projection then adds the win bonus.
+    pir: Math.round(credit * 0.95 * 10) / 10,
+    fantasyPoints: Math.round(credit * 0.95 * 10) / 10,
+    fpStdev: Math.round(credit * 0.32 * 10) / 10,
   };
 }
 

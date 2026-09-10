@@ -289,8 +289,11 @@ export async function ingestLiveSeason(
       ...line,
       usage: usageRate(row, teamCode ? tradByCode.get(teamCode) : null),
       pir: round1(num(row.pir)),
-      fantasyPoints: fp,
-      fpStdev: round1(Math.max(fp, 2) * 0.34),
+      // Official EuroLeague Fantasy score = PIR (the ±1 valuation). We store the
+      // real PIR from the API as the fantasy base (win bonus is applied at
+      // projection time). `fp` above is kept only for the price fallback.
+      fantasyPoints: round1(num(row.pir)),
+      fpStdev: round1(Math.max(num(row.pir), 2) * 0.34),
     };
 
     // Match by stable person code first, then fall back to name.

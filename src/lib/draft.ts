@@ -224,15 +224,15 @@ export function advise(
     let score = 0;
     switch (kind) {
       case "best":
-        score = p.projFantasyPoints * 2 + p.valueScore;
+        score = p.projFantasyPoints * 3.2 + p.valueScore;
         break;
       case "fit": {
         const needBonus = needs.includes(p.position) ? 35 : 0;
-        score = p.projFantasyPoints * 1.5 + p.valueScore + needBonus;
+        score = p.projFantasyPoints * 2.4 + p.valueScore + needBonus;
         break;
       }
       case "upside":
-        score = p.upsideScore * 2 + p.projFantasyPoints * 0.5;
+        score = p.upsideScore * 2 + p.projFantasyPoints * 0.8;
         break;
       case "safe":
         score = p.consistencyScore * 1.4 + p.riskAdjustedValue;
@@ -266,7 +266,9 @@ export function gradeRoster(players: DraftablePlayer[]): { grade: string; score:
   const avgValue = players.reduce((a, p) => a + p.valueScore, 0) / players.length;
   const positions = new Set(players.map((p) => p.position));
   const balanceBonus = positions.size * 4; // reward positional coverage
-  const score = totalFp * 1.2 + avgValue * 0.6 + balanceBonus;
+  // totalFp is now on the PIR scale (~40% lower than the old custom FP), so the
+  // coefficient is bumped to keep the A+…D buckets below calibrated the same.
+  const score = totalFp * 1.9 + avgValue * 0.6 + balanceBonus;
 
   // Buckets tuned for a ~10-man roster.
   const grade =

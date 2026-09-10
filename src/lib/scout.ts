@@ -41,7 +41,7 @@ export function fastStartEligible(p: PlayerDTO): boolean {
   if (!p.last || p.last.games < 10) return false; // too small a sample
   if (p.depthRole !== "starter" && p.depthRole !== "rotation") return false;
   if (j.projMinutes < 18) return false; // has a real day-1 role
-  return j.projFantasyPoints >= 10; // production floor — must actually contribute
+  return j.projFantasyPoints >= 6; // production floor (PIR scale) — must contribute
 }
 
 // Expected early per-game output, trusting proven recent form over projection,
@@ -98,7 +98,7 @@ export function fitScore(p: PlayerDTO, intent: IntentKey): number {
     case "safe":
       // consistent, plays real minutes, low injury risk
       if (j.projMinutes < 16) return NEG;
-      return j.consistencyScore * 0.55 + (100 - j.injuryRisk) * 0.3 + Math.min(j.projFantasyPoints, 30) * 0.5;
+      return j.consistencyScore * 0.55 + (100 - j.injuryRisk) * 0.3 + Math.min(j.projFantasyPoints, 20) * 0.8;
     case "differential":
       // good risk-adjusted value that the crowd is sleeping on
       if (j.projMinutes < 12) return NEG;

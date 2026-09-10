@@ -66,6 +66,8 @@ export interface DraftablePlayer {
   teamShort: string | null;
   fantasyPrice: number;
   projFantasyPoints: number;
+  floorFP: number; // cold-day fantasy floor
+  ceilingFP: number; // hot-day fantasy ceiling
   valueScore: number;
   upsideScore: number;
   consistencyScore: number;

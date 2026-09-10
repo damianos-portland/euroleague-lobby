@@ -6,6 +6,7 @@
 import { prisma } from "./db";
 import { Position } from "./types";
 import { sendPushToUser } from "./push";
+import { fpRange } from "./value";
 import {
   DraftablePlayer,
   seatForPick,
@@ -24,18 +25,33 @@ import {
 } from "./draft";
 
 function toDraftable(p: any): DraftablePlayer {
+  const proj = p.projection;
+  const range = proj
+    ? fpRange(
+        {
+          projFantasyPoints: proj.projFantasyPoints ?? 0,
+          projMinutes: proj.projMinutes ?? 0,
+          projUsage: proj.projUsage ?? 0,
+          consistencyScore: proj.consistencyScore ?? 0,
+          upsideScore: proj.upsideScore ?? 0,
+        },
+        p.age ?? 25
+      )
+    : { floor: 0, mean: 0, ceiling: 0, swing: 0 };
   return {
     id: p.id,
     name: `${p.firstName} ${p.lastName}`,
     position: p.position as Position,
     teamShort: p.team?.shortName ?? null,
     fantasyPrice: p.fantasyPrice,
-    projFantasyPoints: p.projection?.projFantasyPoints ?? 0,
-    valueScore: p.projection?.valueScore ?? 0,
-    upsideScore: p.projection?.upsideScore ?? 0,
-    consistencyScore: p.projection?.consistencyScore ?? 0,
-    riskAdjustedValue: p.projection?.riskAdjustedValue ?? 0,
-    recommendation: p.projection?.recommendation ?? "",
+    projFantasyPoints: proj?.projFantasyPoints ?? 0,
+    floorFP: range.floor,
+    ceilingFP: range.ceiling,
+    valueScore: proj?.valueScore ?? 0,
+    upsideScore: proj?.upsideScore ?? 0,
+    consistencyScore: proj?.consistencyScore ?? 0,
+    riskAdjustedValue: proj?.riskAdjustedValue ?? 0,
+    recommendation: proj?.recommendation ?? "",
   };
 }
 
@@ -47,10 +63,13 @@ const PLAYER_SELECT = {
   lastName: true,
   position: true,
   fantasyPrice: true,
+  age: true, // for the floor/ceiling swing
   team: { select: { shortName: true } },
   projection: {
     select: {
       projFantasyPoints: true,
+      projMinutes: true,
+      projUsage: true,
       valueScore: true,
       upsideScore: true,
       consistencyScore: true,

@@ -254,7 +254,14 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
                       <td className="td"><PosBadge pos={p.position} /></td>
                       <td className="td text-slate-400">{p.teamShort ?? "FA"}</td>
                       <td className="td text-right stat">{p.fantasyPrice.toFixed(1)}</td>
-                      <td className="td text-right stat font-bold text-white">{p.projFantasyPoints.toFixed(1)}</td>
+                      <td className="td text-right">
+                        <div className="stat font-bold text-white">{p.projFantasyPoints.toFixed(1)}</div>
+                        <div className="stat text-[10px] leading-tight" title="Κρύα–Καυτή μέρα">
+                          <span className="text-sky-400">{p.floorFP.toFixed(1)}</span>
+                          <span className="text-slate-600">–</span>
+                          <span className="text-brand-400">{p.ceilingFP.toFixed(1)}</span>
+                        </div>
+                      </td>
                       <td className="td text-right stat text-slate-300">{p.valueScore.toFixed(0)}</td>
                       <td className="td"><RecBadge rec={p.recommendation} /></td>
                       <td className="td text-right">
@@ -386,6 +393,11 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
             <div className="mt-1 text-xs text-slate-400">
               {pendingPick.teamShort ?? "FA"} · {pendingPick.projFantasyPoints.toFixed(1)} proj FP · {pendingPick.fantasyPrice.toFixed(1)}cr
               <span className="ml-1 text-slate-500">→ {state.onTheClock?.teamName}</span>
+            </div>
+            <div className="mt-1 text-xs">
+              <span className="text-sky-400">κρύα {pendingPick.floorFP.toFixed(1)}</span>
+              <span className="mx-1 text-slate-600">·</span>
+              <span className="text-brand-400">καυτή {pendingPick.ceilingFP.toFixed(1)}</span>
             </div>
             <div className="mt-4 flex gap-2">
               <button className="btn-ghost flex-1" onClick={() => setPendingPick(null)}>Άκυρο</button>

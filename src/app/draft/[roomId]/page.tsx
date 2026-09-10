@@ -464,6 +464,7 @@ function RosterNeeds({ participant }: { participant: any }) {
 }
 
 function DraftBoard({ state, youId }: { state: any; youId?: string }) {
+  const [sel, setSel] = useState<any>(null);
   const parts = state.participants;
   const rounds = state.room.rounds;
   // Place each pick under the team that actually made it, at its round — snake
@@ -475,6 +476,7 @@ function DraftBoard({ state, youId }: { state: any; youId?: string }) {
   const currentRound = state.room.currentPickIndex != null ? Math.floor(state.room.currentPickIndex / Math.max(1, parts.length)) + 1 : -1;
 
   return (
+    <>
     <table className="w-full min-w-[700px] border-separate border-spacing-1">
       <thead>
         <tr>
@@ -498,10 +500,10 @@ function DraftBoard({ state, youId }: { state: any; youId?: string }) {
                   p.id === youId && "outline outline-1 outline-brand-500/20"
                 )}>
                   {pick ? (
-                    <div>
-                      <div className="truncate font-semibold text-white">{pick.player.name.split(" ").slice(-1)[0]}</div>
+                    <button onClick={() => setSel(pick)} className="w-full" title="Λεπτομέρειες pick">
+                      <div className="truncate font-semibold text-white hover:text-brand-300">{pick.player.name.split(" ").slice(-1)[0]}</div>
                       <div className="text-slate-500">{pick.player.position}{pick.auto ? " ·A" : ""}</div>
-                    </div>
+                    </button>
                   ) : (
                     <span className="text-slate-600">—</span>
                   )}
@@ -512,5 +514,63 @@ function DraftBoard({ state, youId }: { state: any; youId?: string }) {
         ))}
       </tbody>
     </table>
+
+    {sel && (
+      <div
+        className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center"
+        onClick={() => setSel(null)}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="card-pad w-full max-w-sm rounded-2xl border border-white/10 bg-ink-850 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2">
+            <PosBadge pos={sel.player.position} />
+            <span className="text-lg font-extrabold text-white">{sel.player.name}</span>
+          </div>
+          <div className="mt-0.5 text-xs text-slate-400">{sel.player.teamShort ?? "FA"} · {sel.player.fantasyPrice.toFixed(1)}cr</div>
+
+          <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Επιλέχθηκε από</span>
+              <span className={clsx("font-semibold", sel.participantId === youId ? "text-brand-400" : "text-white")}>
+                {sel.teamName}{sel.participantId === youId ? " (εσύ)" : ""}
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-slate-400">Θέση draft</span>
+              <span className="stat text-white">R{sel.round}.{sel.pickInRound} · #{sel.overall + 1}{sel.auto ? " · auto" : ""}</span>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl bg-white/[0.03] p-2">
+              <div className="text-[10px] uppercase tracking-wide text-slate-500">Proj FP</div>
+              <div className="stat font-bold text-white">{sel.player.projFantasyPoints.toFixed(1)}</div>
+            </div>
+            <div className="rounded-xl bg-white/[0.03] p-2">
+              <div className="text-[10px] uppercase tracking-wide text-slate-500">Κρύα–Καυτή</div>
+              <div className="stat text-xs">
+                <span className="text-sky-400">{sel.player.floorFP.toFixed(1)}</span>
+                <span className="text-slate-600">–</span>
+                <span className="text-brand-400">{sel.player.ceilingFP.toFixed(1)}</span>
+              </div>
+            </div>
+            <div className="rounded-xl bg-white/[0.03] p-2">
+              <div className="text-[10px] uppercase tracking-wide text-slate-500">Value</div>
+              <div className="stat font-bold text-white">{sel.player.valueScore.toFixed(0)}</div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <RecBadge rec={sel.player.recommendation} />
+            <div className="flex gap-2">
+              <Link href={`/players/${sel.player.id}`} className="btn-ghost !py-1.5 text-xs">Προφίλ</Link>
+              <button className="btn-primary !py-1.5 text-xs" onClick={() => setSel(null)}>Κλείσιμο</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

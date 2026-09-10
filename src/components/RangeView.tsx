@@ -60,9 +60,9 @@ export function RangeView({ players }: { players: PlayerDTO[] }) {
         <div className="ml-auto flex items-center gap-1 text-xs">
           <span className="text-slate-500">Ταξινόμηση:</span>
           {([
-            ["ceiling", "Καυτός"],
+            ["ceiling", "Hot"],
             ["mean", "Μέσος"],
-            ["floor", "Κρύος"],
+            ["floor", "Cold"],
             ["swing", "Διακύμανση"],
           ] as [SortCol, string][]).map(([col, label]) => (
             <button
@@ -78,9 +78,9 @@ export function RangeView({ players }: { players: PlayerDTO[] }) {
 
       {/* Legend */}
       <div className="mb-3 flex items-center gap-4 text-[11px] text-slate-400">
-        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-sky-400" /> Κρύα μέρα (floor)</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-sky-400" /> Cold (floor)</span>
         <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-slate-200" /> Μέσος όρος</span>
-        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-brand-500" /> Καυτή μέρα (ceiling)</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-brand-500" /> Hot (ceiling)</span>
       </div>
 
       <div className="overflow-x-auto">
@@ -91,9 +91,9 @@ export function RangeView({ players }: { players: PlayerDTO[] }) {
               <th className="th">Παίκτης</th>
               <th className="th w-12">Θέση</th>
               <th className="th w-14 text-right">Τιμή</th>
-              <th className="th w-14 text-right text-sky-400">Κρύος</th>
+              <th className="th w-14 text-right text-sky-400">Cold</th>
               <th className="th w-14 text-right">Μέσος</th>
-              <th className="th w-14 text-right text-brand-400">Καυτός</th>
+              <th className="th w-14 text-right text-brand-400">Hot</th>
               <th className="th min-w-[220px]">Εύρος FP</th>
             </tr>
           </thead>

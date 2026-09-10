@@ -256,7 +256,7 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
                       <td className="td text-right stat">{p.fantasyPrice.toFixed(1)}</td>
                       <td className="td text-right">
                         <div className="stat font-bold text-white">{p.projFantasyPoints.toFixed(1)}</div>
-                        <div className="stat text-[10px] leading-tight" title="Κρύα–Καυτή μέρα">
+                        <div className="stat text-[10px] leading-tight" title="Cold–Hot">
                           <span className="text-sky-400">{p.floorFP.toFixed(1)}</span>
                           <span className="text-slate-600">–</span>
                           <span className="text-brand-400">{p.ceilingFP.toFixed(1)}</span>
@@ -395,9 +395,9 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
               <span className="ml-1 text-slate-500">→ {state.onTheClock?.teamName}</span>
             </div>
             <div className="mt-1 text-xs">
-              <span className="text-sky-400">κρύα {pendingPick.floorFP.toFixed(1)}</span>
+              <span className="text-sky-400">cold {pendingPick.floorFP.toFixed(1)}</span>
               <span className="mx-1 text-slate-600">·</span>
-              <span className="text-brand-400">καυτή {pendingPick.ceilingFP.toFixed(1)}</span>
+              <span className="text-brand-400">hot {pendingPick.ceilingFP.toFixed(1)}</span>
             </div>
             <div className="mt-4 flex gap-2">
               <button className="btn-ghost flex-1" onClick={() => setPendingPick(null)}>Άκυρο</button>
@@ -548,7 +548,7 @@ function DraftBoard({ state, youId }: { state: any; youId?: string }) {
               <div className="stat font-bold text-white">{sel.player.projFantasyPoints.toFixed(1)}</div>
             </div>
             <div className="rounded-xl bg-white/[0.03] p-2">
-              <div className="text-[10px] uppercase tracking-wide text-slate-500">Κρύα–Καυτή</div>
+              <div className="text-[10px] uppercase tracking-wide text-slate-500">Cold–Hot</div>
               <div className="stat text-xs">
                 <span className="text-sky-400">{sel.player.floorFP.toFixed(1)}</span>
                 <span className="text-slate-600">–</span>

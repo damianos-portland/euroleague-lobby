@@ -1,5 +1,26 @@
 [
   {
+    "first": "Alberto",
+    "last": "Abalde",
+    "flag": "sleeper",
+    "note": "Σταθερός 10/11/7π, ξεκίνησε γ2· projFP 3.4 τον υποτιμά",
+    "confidence": "med"
+  },
+  {
+    "first": "Awudu",
+    "last": "Abass",
+    "flag": "neutral",
+    "note": "9' 2π vs Türk Telekom· βαθύς πάγκος",
+    "confidence": "med"
+  },
+  {
+    "first": "Nicola",
+    "last": "Akele",
+    "flag": "neutral",
+    "note": "2-0-7π· ενέργεια αλλά περιορισμένος ρόλος",
+    "confidence": "med"
+  },
+  {
     "first": "Kaodirichi",
     "last": "Akobundu-Ehiogu",
     "flag": "hot",
@@ -14,6 +35,13 @@
     "confidence": "med"
   },
   {
+    "first": "Izan",
+    "last": "Almansa",
+    "flag": "neutral",
+    "note": "Καμία εμφάνιση σε 3 φιλικά· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Derrick",
     "last": "Alston JR.",
     "flag": "hot",
@@ -21,10 +49,45 @@
     "confidence": "high"
   },
   {
+    "first": "Justin",
+    "last": "Anderson",
+    "flag": "neutral",
+    "note": "18' αλλά 0π vs Türk Telekom· περιθωριακός στην επίθεση",
+    "confidence": "med"
+  },
+  {
+    "first": "Joel",
+    "last": "Ayayi",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Dwayne",
+    "last": "Bacon",
+    "flag": "neutral",
+    "note": "11π 4/6 σε 21' vs Türk Telekom· σταθερός ρόλος στα φτερά",
+    "confidence": "med"
+  },
+  {
     "first": "Armando",
     "last": "Bacot JR.",
     "flag": "neutral",
     "note": "Marquee signing — projFP 1.2 μάλλον data-gap",
+    "confidence": "med"
+  },
+  {
+    "first": "Brancou",
+    "last": "Badio",
+    "flag": "neutral",
+    "note": "Ενεργός, ανεπίσημο ντεμπούτο· χωρίς στατιστικά",
+    "confidence": "med"
+  },
+  {
+    "first": "Matteo",
+    "last": "Baiocchi",
+    "flag": "neutral",
+    "note": "Οριακός ρόλος, μόνο 5π στο φιλικό της Πεζάρο",
     "confidence": "med"
   },
   {
@@ -35,11 +98,39 @@
     "confidence": "med"
   },
   {
+    "first": "Kamar",
+    "last": "Baldwin",
+    "flag": "neutral",
+    "note": "7π vs Bamberg από πάγκο· βοηθητικός γκαρντ",
+    "confidence": "med"
+  },
+  {
     "first": "Wade",
     "last": "Baldwin IV",
     "flag": "hot",
     "note": "Κορυφαία γκαρντ επιλογή Fener· 9.2π/4.2ασ σε 19' στα φιλικά",
     "confidence": "med"
+  },
+  {
+    "first": "Patrick",
+    "last": "Baldwin Jr",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Damion",
+    "last": "Baugh",
+    "flag": "neutral",
+    "note": "Combo guard· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Marjon",
+    "last": "Beauchamp",
+    "flag": "hot",
+    "note": "17π vs Σλοβάκους, 10π+5ρ vs Bamberg· ηγέτης επίθεσης",
+    "confidence": "high"
   },
   {
     "first": "Rasheed",
@@ -49,6 +140,62 @@
     "confidence": "low"
   },
   {
+    "first": "Davis",
+    "last": "Bertans",
+    "flag": "neutral",
+    "note": "Δεν εμφανίστηκε στο box vs Türk Telekom· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Hugo",
+    "last": "Besson",
+    "flag": "neutral",
+    "note": "Σκόρερ γκαρντ· έντονος ανταγωνισμός, χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Marcus",
+    "last": "Bingham",
+    "flag": "neutral",
+    "note": "Πιθανός βασικός σέντερ αλλά αργησε να ενταχθεί· χωρίς νούμερα",
+    "confidence": "low"
+  },
+  {
+    "first": "Metecan",
+    "last": "Birsen",
+    "flag": "neutral",
+    "note": "Βαθύ φροντκορτ, ελάχιστα λεπτά· projFP 2.3 ρεαλιστικό",
+    "confidence": "med"
+  },
+  {
+    "first": "Onuralp",
+    "last": "Bitim",
+    "flag": "neutral",
+    "note": "Βαθιά ρότα φτερών· περιθωριακός, χαμηλό projFP σωστό",
+    "confidence": "low"
+  },
+  {
+    "first": "Antonio",
+    "last": "Blakeney",
+    "flag": "sleeper",
+    "note": "28' 13π PIR15 vs Partizan, 16π vs Balkan· projFP 8.3 τον υποτιμά",
+    "confidence": "med"
+  },
+  {
+    "first": "Tamir",
+    "last": "Blatt",
+    "flag": "injured",
+    "note": "Injury report: Uncertain R1, απών στα φιλικά· ρίσκο για projFP 8.3",
+    "confidence": "med"
+  },
+  {
+    "first": "Marek",
+    "last": "Blazevic",
+    "flag": "sleeper",
+    "note": "17π/6ρ EFF24 vs Sabah όταν έλειψε ο Valanciunas· το 10.0 proj τον υποτιμά",
+    "confidence": "med"
+  },
+  {
     "first": "Jaron",
     "last": "Blossomgame",
     "flag": "neutral",
@@ -56,10 +203,66 @@
     "confidence": "low"
   },
   {
+    "first": "Leandro",
+    "last": "Bolmaro",
+    "flag": "neutral",
+    "note": "Ντεμπούτο 5π, ενέργεια/κλεψίματα· λίγα δεδομένα",
+    "confidence": "med"
+  },
+  {
+    "first": "Joel",
+    "last": "Bolomboy",
+    "flag": "sleeper",
+    "note": "Επανυπέγραψε 2ετές, σχεδόν μοναδικός σέντερ· projFP 6.6 χαμηλό για τα λεπτά",
+    "confidence": "low"
+  },
+  {
+    "first": "Isaac",
+    "last": "Bonga",
+    "flag": "neutral",
+    "note": "Ενεργός, ανεπίσημο ντεμπούτο· χωρίς στατιστικά vs ΑΕΚ",
+    "confidence": "med"
+  },
+  {
+    "first": "Devin",
+    "last": "Booker",
+    "flag": "neutral",
+    "note": "Αναπληρωματικός σέντερ πίσω από Wright· μέτριος στα φιλικά",
+    "confidence": "med"
+  },
+  {
+    "first": "Mitar",
+    "last": "Bosnjakovic",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα από τα φιλικά",
+    "confidence": "low"
+  },
+  {
+    "first": "Nobel",
+    "last": "Boungou-Colo",
+    "flag": "trap",
+    "note": "Επιστροφή στα 38 μετά 5 χρόνια· περιορισμένα λεπτά, projFP 5.8 υπερεκτιμά",
+    "confidence": "med"
+  },
+  {
+    "first": "Frederic",
+    "last": "Bourdillon",
+    "flag": "trap",
+    "note": "7' 0π vs Balkan, DNP vs Partizan· ελάχιστος ρόλος",
+    "confidence": "med"
+  },
+  {
     "first": "Oshae",
     "last": "Brissett",
     "flag": "neutral",
     "note": "Rotation forward, 12π ένα ματς",
+    "confidence": "med"
+  },
+  {
+    "first": "Dario",
+    "last": "Brizuela",
+    "flag": "neutral",
+    "note": "7π με Manresa, ενεργός· εντός προσδοκιών",
     "confidence": "med"
   },
   {
@@ -84,6 +287,13 @@
     "confidence": "med"
   },
   {
+    "first": "Vitto",
+    "last": "Brown",
+    "flag": "trap",
+    "note": "Έφυγε (7/26), αγωνίζεται Ιαπωνία· εκτός ρόστερ Besiktas",
+    "confidence": "high"
+  },
+  {
     "first": "Elijah",
     "last": "Bryant",
     "flag": "hot",
@@ -98,6 +308,13 @@
     "confidence": "med"
   },
   {
+    "first": "Arnas",
+    "last": "Butkevicius",
+    "flag": "neutral",
+    "note": "Ρόλος ρότας: 7π EFF6 & 3π EFF3· τίποτα το ξεχωριστό",
+    "confidence": "med"
+  },
+  {
     "first": "Jared",
     "last": "Butler",
     "flag": "sleeper",
@@ -105,10 +322,73 @@
     "confidence": "med"
   },
   {
+    "first": "Myles",
+    "last": "Cale",
+    "flag": "neutral",
+    "note": "Περιφερειακός, περιθωριακός ρόλος· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Facundo",
     "last": "Campazzo",
     "flag": "hot",
     "note": "Βασικός πλέι Ρεάλ σε MVP φόρμα, key role στο 97-90 με Τενερίφε, υγιής",
+    "confidence": "med"
+  },
+  {
+    "first": "Alvaro",
+    "last": "Cardenas",
+    "flag": "sleeper",
+    "note": "10π από τον πάγκο στο ντεμπούτο με μόλις 4.5cr· projFP 4.4 τον υποτιμά",
+    "confidence": "med"
+  },
+  {
+    "first": "Marcus",
+    "last": "Carr",
+    "flag": "neutral",
+    "note": "Γύρισε από εθνική, βασικός πλέι (10 & 6π)· έχασε μόνο το 1ο φιλικό",
+    "confidence": "med"
+  },
+  {
+    "first": "Khadeen",
+    "last": "Carrington",
+    "flag": "trap",
+    "note": "7' 0π PIR-3 vs Partizan· βαθιά στους γκαρντ, projFP 8.7 υπερτιμά",
+    "confidence": "med"
+  },
+  {
+    "first": "Tyson",
+    "last": "Carter",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Davide",
+    "last": "Casarin",
+    "flag": "neutral",
+    "note": "Περιορισμένος ρόλος (3/0/7π), μέτριος στα 3 φιλικά",
+    "confidence": "med"
+  },
+  {
+    "first": "Leopold",
+    "last": "Cavaliere",
+    "flag": "neutral",
+    "note": "Βετεράνος βαθύς πάγκος· χωρίς στοιχεία",
+    "confidence": "low"
+  },
+  {
+    "first": "Jimmy",
+    "last": "Clark III",
+    "flag": "neutral",
+    "note": "Πολύ γεμάτο backcourt· ρόλος σε ρίσκο, χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Will",
+    "last": "Clyburn",
+    "flag": "hot",
+    "note": "Κορυφαίος σκόρερ 13π & εντυπωσίασε vs Μιλάνο (81-79)· ενεργός σκόρερ",
     "confidence": "med"
   },
   {
@@ -119,6 +399,13 @@
     "confidence": "med"
   },
   {
+    "first": "Rj",
+    "last": "Cole",
+    "flag": "hot",
+    "note": "17π+7ασ βασικός vs Φενέρ· το υψηλό projFP δικαιολογείται",
+    "confidence": "med"
+  },
+  {
     "first": "Bonzie",
     "last": "Colson",
     "flag": "neutral",
@@ -126,10 +413,45 @@
     "confidence": "med"
   },
   {
+    "first": "Gonzalo",
+    "last": "Corbalan",
+    "flag": "neutral",
+    "note": "4π από τον πάγκο στο ντεμπούτο vs Θαραγόσα",
+    "confidence": "med"
+  },
+  {
+    "first": "Isaia",
+    "last": "Cordinier",
+    "flag": "neutral",
+    "note": "Καμία αναφορά σε 4 φιλικά· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Jae",
     "last": "Crowder",
     "flag": "neutral",
     "note": "Full 5-game slate, χωρίς ατομικά box",
+    "confidence": "low"
+  },
+  {
+    "first": "Oscar",
+    "last": "Da Silva",
+    "flag": "neutral",
+    "note": "9π vs Bamberg· εντός προσδοκιών, λίγα δεδομένα",
+    "confidence": "med"
+  },
+  {
+    "first": "Nemanja",
+    "last": "Dangubic",
+    "flag": "sleeper",
+    "note": "11π/PIR11 σε μόλις 8' vs Türk Telekom· projFP 0.5 τον υποτιμά",
+    "confidence": "med"
+  },
+  {
+    "first": "Dejan",
+    "last": "Davidovac",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
     "confidence": "low"
   },
   {
@@ -140,10 +462,122 @@
     "confidence": "high"
   },
   {
+    "first": "David",
+    "last": "Dejulius",
+    "flag": "trap",
+    "note": "Ίδια τιμή με Dotson αλλά γεμάτο μπακ-κορτ· ρόλος πιθανά μικρότερος",
+    "confidence": "low"
+  },
+  {
+    "first": "Brice",
+    "last": "Dessert",
+    "flag": "neutral",
+    "note": "Καμία αναφορά· πολύ γεμάτη frontline· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Mamadi",
+    "last": "Diakite",
+    "flag": "neutral",
+    "note": "17' αλλά 0π, μόνο 5ρ vs Türk Telekom· γεμάτη γραμμή ψηλών",
+    "confidence": "med"
+  },
+  {
+    "first": "Aliou",
+    "last": "Diarra",
+    "flag": "sleeper",
+    "note": "Ανεβαίνει 5/6/8π, βασικός με Πεζάρο· φθηνός με αυξανόμενο ρόλο",
+    "confidence": "med"
+  },
+  {
+    "first": "John",
+    "last": "Dibartolomeo",
+    "flag": "neutral",
+    "note": "Βαθύς backcourt, περιθωριακός ρόλος· χαμηλό projFP δικαιολογημένο",
+    "confidence": "low"
+  },
+  {
+    "first": "Khalifa",
+    "last": "Diop",
+    "flag": "trap",
+    "note": "Έφυγε στο NBA (Cleveland 2/9), ΔΕΝ αγωνίζεται EuroLeague 26-27",
+    "confidence": "high"
+  },
+  {
+    "first": "Ousmane",
+    "last": "Diop",
+    "flag": "neutral",
+    "note": "Έχασε Φενέρ· 7π vs Στρασβούργο· backup σέντερ",
+    "confidence": "med"
+  },
+  {
+    "first": "Mouhamet",
+    "last": "Diouf",
+    "flag": "neutral",
+    "note": "Βασικός σέντερ και στα 3 φιλικά αλλά χαμηλοί πόντοι (1/2/7)",
+    "confidence": "med"
+  },
+  {
+    "first": "Nikola",
+    "last": "Djurisic",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Ognjen",
+    "last": "Dobric",
+    "flag": "neutral",
+    "note": "Βετεράνος/αρχηγός, πιθανή παραμονή· χωρίς στοιχεία",
+    "confidence": "low"
+  },
+  {
+    "first": "Allan",
+    "last": "Dokossi",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα· projFP 10.5 αστήρικτο",
+    "confidence": "low"
+  },
+  {
     "first": "Tyler",
     "last": "Dorsey",
     "flag": "neutral",
     "note": "Έπαιξε στο 89-87 επί Ερ. Αστέρα, χωρίς αναφερόμενα ατομικά stats",
+    "confidence": "low"
+  },
+  {
+    "first": "Mathis",
+    "last": "Dossou-Yovo",
+    "flag": "neutral",
+    "note": "Ρόλος ανεπιβεβαίωτος· υψηλό projFP 10.5 αβέβαιο, χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Devon",
+    "last": "Dotson",
+    "flag": "neutral",
+    "note": "Επιβεβ. βασικός PG, υγιής· χωρίς αναλυτικά box score",
+    "confidence": "med"
+  },
+  {
+    "first": "Perry",
+    "last": "Dozier",
+    "flag": "neutral",
+    "note": "Δεν εμφανίστηκε στο box· πολύ γεμάτο νέο μπακ-κορτ",
+    "confidence": "low"
+  },
+  {
+    "first": "Chris",
+    "last": "Duarte",
+    "flag": "neutral",
+    "note": "Επιβεβ. βασικός σκόρερ, υγιής· χωρίς box score φιλικών",
+    "confidence": "med"
+  },
+  {
+    "first": "Amit",
+    "last": "Ebo",
+    "flag": "neutral",
+    "note": "Νεαρός γκαρντ βαθιάς ρότας· χωρίς αξιόπιστα δεδομένα",
     "confidence": "low"
   },
   {
@@ -159,6 +593,13 @@
     "flag": "neutral",
     "note": "Νέος από Βίρτους, Ζάλγκιρις 4-1 αλλά δεν ξεχώρισε",
     "confidence": "low"
+  },
+  {
+    "first": "Tyler",
+    "last": "Ennis",
+    "flag": "injured",
+    "note": "Injury report: ρήξη αχίλλειου, doubtful R1· εκτός",
+    "confidence": "high"
   },
   {
     "first": "Tyson",
@@ -182,6 +623,13 @@
     "confidence": "high"
   },
   {
+    "first": "Kenneth",
+    "last": "Faried",
+    "flag": "neutral",
+    "note": "Υπέγραψε αργά (25/8), 36 ετών· αβέβαιη ενσωμάτωση",
+    "confidence": "low"
+  },
+  {
     "first": "Mouhamed",
     "last": "Faye",
     "flag": "neutral",
@@ -189,10 +637,52 @@
     "confidence": "med"
   },
   {
+    "first": "Andres",
+    "last": "Feliz",
+    "flag": "sleeper",
+    "note": "14π & 8π από πάγκο· φθηνός (6.2) παραγωγικός σκόρερ",
+    "confidence": "med"
+  },
+  {
+    "first": "Bruno",
+    "last": "Fernando",
+    "flag": "hot",
+    "note": "15π/9ρ κόντρα ΑΕΚ· ενεργός, αλλά γεμάτη frontline",
+    "confidence": "med"
+  },
+  {
+    "first": "Francesco",
+    "last": "Ferrari",
+    "flag": "sleeper",
+    "note": "12π με Τορτόνα & 8π με Πεζάρο, πάνω από το projFP 3.6",
+    "confidence": "med"
+  },
+  {
+    "first": "Diego",
+    "last": "Flaccadori",
+    "flag": "neutral",
+    "note": "2-3-4π σε ελάχιστα λεπτά· βαθύς πάγκος",
+    "confidence": "med"
+  },
+  {
+    "first": "Marc-owen",
+    "last": "Fodzo Dada",
+    "flag": "neutral",
+    "note": "Νεαρός γκαρντ, βαθύ ρόστερ· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Trent",
     "last": "Forrest",
     "flag": "sleeper",
     "note": "20.7' με 4π/3ρ/3ασ· σίγουρος ρόλος, best-value γκαρντ",
+    "confidence": "med"
+  },
+  {
+    "first": "Evan",
+    "last": "Fournier",
+    "flag": "sleeper",
+    "note": "Κορυφαίος σκόρερ 19π vs Φενέρ, υγιής· projFP 8.1 τον υποτιμά",
     "confidence": "med"
   },
   {
@@ -210,11 +700,39 @@
     "confidence": "med"
   },
   {
+    "first": "Clement",
+    "last": "Frisch",
+    "flag": "neutral",
+    "note": "Νεαρός, περιθωριακός ρόλος· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Wenyen",
     "last": "Gabriel",
     "flag": "neutral",
     "note": "Signed, χωρίς επιβεβαιωμένη preseason",
     "confidence": "low"
+  },
+  {
+    "first": "Both",
+    "last": "Gach",
+    "flag": "neutral",
+    "note": "Στο ρόστερ ως ουίνγκ· χωρίς αξιόπιστα δεδομένα preseason",
+    "confidence": "low"
+  },
+  {
+    "first": "Usman",
+    "last": "Garuba",
+    "flag": "neutral",
+    "note": "Καμία εμφάνιση σε 3 φιλικά· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Eugene",
+    "last": "German",
+    "flag": "trap",
+    "note": "Λεπτά πέφτουν (6'), 0π PIR-4 vs Partizan· εκτός ροτέισον",
+    "confidence": "med"
   },
   {
     "first": "Umoja",
@@ -224,11 +742,102 @@
     "confidence": "low"
   },
   {
+    "first": "Dovydas",
+    "last": "Giedraitis",
+    "flag": "neutral",
+    "note": "23' vs Vroclav μα ελάχιστη παραγωγή: 0π, 6π vs Sabah",
+    "confidence": "med"
+  },
+  {
+    "first": "Niels",
+    "last": "Giffey",
+    "flag": "sleeper",
+    "note": "13π (5/7) top στο 1ο φιλικό, βασικός SF· projFP 3.1 υποτιμά τον ρόλο",
+    "confidence": "med"
+  },
+  {
+    "first": "Tomer",
+    "last": "Ginat",
+    "flag": "neutral",
+    "note": "Απών στα φιλικά, εκτός injury report· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Jerian",
+    "last": "Grant",
+    "flag": "sleeper",
+    "note": "10π vs ΑΕΚ σε ροτέισον χωρίς βασικούς· φθηνός, πιθανό value",
+    "confidence": "low"
+  },
+  {
+    "first": "Marius",
+    "last": "Grigonis",
+    "flag": "sleeper",
+    "note": "projFP 0.4 μα ΕΝΕΡΓΟΣ: 11π EFF14 vs Sabah & 8π vs Vroclav· τεράστια υποτίμηση",
+    "confidence": "high"
+  },
+  {
+    "first": "Marko",
+    "last": "Guduric",
+    "flag": "neutral",
+    "note": "Έχασε Κρήτη (εθνική), μόλις 3π vs Στρασβούργο· λίγα δεδομένα",
+    "confidence": "med"
+  },
+  {
+    "first": "Mo",
+    "last": "Gueye",
+    "flag": "neutral",
+    "note": "7π + άλεϊ-ουπ + τρίποντο, versatile· ενεργός 9/9",
+    "confidence": "med"
+  },
+  {
+    "first": "Daniel",
+    "last": "Hackett",
+    "flag": "neutral",
+    "note": "Βετεράνος, βασικός με Πεζάρο αλλά ελάχιστοι πόντοι (3/2/1)",
+    "confidence": "med"
+  },
+  {
+    "first": "Devon",
+    "last": "Hall",
+    "flag": "sleeper",
+    "note": "Βασικός & ηγέτης, σταθερός 11π/10π· projFP 6.6 τον υποτιμά",
+    "confidence": "high"
+  },
+  {
+    "first": "Donta",
+    "last": "Hall",
+    "flag": "hot",
+    "note": "16π/8ρ στον ημιτελικό vs Φενέρ· ενεργός και παραγωγικός στο 5",
+    "confidence": "med"
+  },
+  {
     "first": "Kevarrius",
     "last": "Hayes",
     "flag": "neutral",
     "note": "Starter αλλά quiet (2π/3ρ)",
     "confidence": "med"
+  },
+  {
+    "first": "Nigel",
+    "last": "Hayes-Davis",
+    "flag": "injured",
+    "note": "Τραυματίας, εκτός φιλικών Μαρουσιού (4/9) & ΑΕΚ (11/9)",
+    "confidence": "high"
+  },
+  {
+    "first": "Juancho",
+    "last": "Hernangomez",
+    "flag": "neutral",
+    "note": "Ενεργός, στην αποστολή Ρόδου· χωρίς αναφορά στατιστικών",
+    "confidence": "med"
+  },
+  {
+    "first": "Sebastian",
+    "last": "Herrera",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
   },
   {
     "first": "Nadir",
@@ -238,11 +847,60 @@
     "confidence": "high"
   },
   {
+    "first": "Jaylen",
+    "last": "Hoard",
+    "flag": "trap",
+    "note": "Έχασε αρχή προετοιμασίας, ιστορικό τραυμάτων· γεμάτη 4αδα, projFP αισιόδοξο",
+    "confidence": "low"
+  },
+  {
+    "first": "Justus",
+    "last": "Hollatz",
+    "flag": "neutral",
+    "note": "Ξεκίνησε βασικός vs Bamberg αλλά 0π· ρόλος ναι, μηδενική παραγωγή",
+    "confidence": "med"
+  },
+  {
+    "first": "Daulton",
+    "last": "Hommes",
+    "flag": "neutral",
+    "note": "Ανανέωσε για 3η σεζόν· ρόλος σουτέρ, χωρίς στοιχεία",
+    "confidence": "med"
+  },
+  {
     "first": "Talen",
     "last": "Horton Tucker",
     "flag": "neutral",
     "note": "9.2π/3.2ρ/2.8ασ σε 17.5'· ρόλος υπό πίεση όταν γυρίσει ο Larkin",
     "confidence": "med"
+  },
+  {
+    "first": "Markus",
+    "last": "Howard",
+    "flag": "neutral",
+    "note": "Σκόρερ· preseason με πολλές απουσίες, χωρίς ατομικά δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Shane",
+    "last": "Hunter",
+    "flag": "trap",
+    "note": "Ανακλήθηκε από δανεικός σε γεμάτη 5άδα· ελάχιστος ρόλος",
+    "confidence": "med"
+  },
+  {
+    "first": "Ebuka",
+    "last": "Izundu",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Edwin",
+    "last": "Jackson",
+    "flag": "neutral",
+    "note": "Βετεράνος, μικρός ρόλος· χωρίς δεδομένα",
+    "confidence": "low"
   },
   {
     "first": "Mam",
@@ -259,10 +917,31 @@
     "confidence": "high"
   },
   {
+    "first": "Mikael",
+    "last": "Jantunen",
+    "flag": "neutral",
+    "note": "4π & 7π ρόλος ροτέισον· χαμηλή παραγωγή, ταιριάζει projFP",
+    "confidence": "med"
+  },
+  {
     "first": "Tonye",
     "last": "Jekiri",
     "flag": "neutral",
     "note": "10π, πραγματικά λεπτά vs Zenit",
+    "confidence": "med"
+  },
+  {
+    "first": "Tobias",
+    "last": "Jensen",
+    "flag": "sleeper",
+    "note": "Κορυφαίος σκόρερ 15π vs Bamberg· ανερχόμενος, ίσως υποτιμημένος",
+    "confidence": "med"
+  },
+  {
+    "first": "Justinian",
+    "last": "Jessup",
+    "flag": "hot",
+    "note": "13π & 14π στα δύο φιλικά· σταθερός σουτέρ",
     "confidence": "med"
   },
   {
@@ -271,6 +950,20 @@
     "flag": "neutral",
     "note": "Ενεργός σε 3 events, χωρίς box",
     "confidence": "low"
+  },
+  {
+    "first": "Stefan",
+    "last": "Joksimovic",
+    "flag": "neutral",
+    "note": "Άκρη πάγκου, ελάχιστος ρόλος· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Rokas",
+    "last": "Jokubaitis",
+    "flag": "trap",
+    "note": "Επιστροφή από χειρουργείο γόνατος· περιορισμένα λεπτά· projFP 10 ρίσκο",
+    "confidence": "med"
   },
   {
     "first": "Kai",
@@ -294,10 +987,45 @@
     "confidence": "med"
   },
   {
+    "first": "Damian",
+    "last": "Jones",
+    "flag": "trap",
+    "note": "3ος σέντερ πίσω Tavares/Sarr· μόνο 4-5π· projFP 8.6 αισιόδοξο",
+    "confidence": "med"
+  },
+  {
+    "first": "Tyrique",
+    "last": "Jones",
+    "flag": "trap",
+    "note": "Γεμάτο φροντ κορτ (Χολ 16/8, Ντιαγιέ MVP)· καμία αναφορά προετοιμασίας",
+    "confidence": "low"
+  },
+  {
+    "first": "Cory",
+    "last": "Joseph",
+    "flag": "neutral",
+    "note": "Έπαιξε στον τελικό αλλά ανταγωνισμός Μοντέρο/ΜακΊντάιρ",
+    "confidence": "med"
+  },
+  {
     "first": "Johnny",
     "last": "Juzang",
     "flag": "hot",
     "note": "11 & 12π, scoring-wing rotation",
+    "confidence": "med"
+  },
+  {
+    "first": "Mfiondu",
+    "last": "Kabengele",
+    "flag": "neutral",
+    "note": "13π από πάγκο vs Efes· ενεργός αλλά πίσω από Πετρούσεβ",
+    "confidence": "med"
+  },
+  {
+    "first": "Kenan",
+    "last": "Kamenjas",
+    "flag": "neutral",
+    "note": "10' 4π 5ρ vs Türk Telekom· βαθύς πάγκος ψηλών",
     "confidence": "med"
   },
   {
@@ -308,11 +1036,32 @@
     "confidence": "low"
   },
   {
+    "first": "Braxton",
+    "last": "Key",
+    "flag": "sleeper",
+    "note": "10π στο ντεμπούτο· projFP 6.4 ίσως χαμηλό αν κρατήσει ρόλο vs Melli",
+    "confidence": "low"
+  },
+  {
+    "first": "Bobi",
+    "last": "Klintman",
+    "flag": "neutral",
+    "note": "Ενεργός σε 3 φιλικά (10/2/8π), βασικός με Τορτόνα· σταθερός ρόλος",
+    "confidence": "med"
+  },
+  {
     "first": "Kevin",
     "last": "Kokila",
     "flag": "injured",
     "note": "Ρήξη μηριαίου — εκτός ΟΛΗΣ της προετοιμασίας",
     "confidence": "high"
+  },
+  {
+    "first": "Kosta",
+    "last": "Kondic",
+    "flag": "neutral",
+    "note": "14' 4π vs Türk Telekom· νεαρός, μέτρια λεπτά",
+    "confidence": "med"
   },
   {
     "first": "Furkan",
@@ -322,6 +1071,41 @@
     "confidence": "low"
   },
   {
+    "first": "Ioannis",
+    "last": "Kouzeloglou",
+    "flag": "injured",
+    "note": "Μυϊκό πρόβλημα, δεν ταξίδεψε στη Ρόδο",
+    "confidence": "med"
+  },
+  {
+    "first": "David",
+    "last": "Kramer",
+    "flag": "neutral",
+    "note": "Υπέγραψε ως σουτέρ· χωρίς στοιχεία φιλικών, projFP 0.8 πολύ χαμηλό",
+    "confidence": "low"
+  },
+  {
+    "first": "Rodions",
+    "last": "Kurucs",
+    "flag": "neutral",
+    "note": "Ενεργός· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Arijan",
+    "last": "Lakic",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα από τα φιλικά",
+    "confidence": "low"
+  },
+  {
+    "first": "Giannoulis",
+    "last": "Larentzakis",
+    "flag": "neutral",
+    "note": "Εκτός τελικού Κρήτης, φέρεται μεταγραφή στην ΑΕΚ",
+    "confidence": "med"
+  },
+  {
     "first": "Shane",
     "last": "Larkin",
     "flag": "trap",
@@ -329,10 +1113,73 @@
     "confidence": "high"
   },
   {
+    "first": "Joffrey",
+    "last": "Lauvergne",
+    "flag": "neutral",
+    "note": "Ενεργός, 7 ριμπάουντ κόντρα Χάποελ· βασικός σέντερ",
+    "confidence": "med"
+  },
+  {
+    "first": "Gur",
+    "last": "Lavy",
+    "flag": "neutral",
+    "note": "Νεαρό φτερό βαθιάς ρότας· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Aj",
+    "last": "Lawson",
+    "flag": "neutral",
+    "note": "Στο ρόστερ, ενεργός· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Tj",
     "last": "Leaf",
     "flag": "trap",
     "note": "Καμία preseason εμφάνιση, φορτωμένο frontcourt",
+    "confidence": "med"
+  },
+  {
+    "first": "Zach",
+    "last": "Leday",
+    "flag": "neutral",
+    "note": "Βασικός αλλά ~17' σε γεμάτο ρόστερ, 8-10π· projFP ίσως αισιόδοξο",
+    "confidence": "med"
+  },
+  {
+    "first": "Saben",
+    "last": "Lee",
+    "flag": "neutral",
+    "note": "Μέτριος: 3π/3ρ/3ασ EFF5 vs Sabah, DNP vs Vroclav· χωρίς ξεχωριστό ρόλο",
+    "confidence": "med"
+  },
+  {
+    "first": "Mathias",
+    "last": "Lessort",
+    "flag": "neutral",
+    "note": "Διαθέσιμος στη Ρόδο, γύρισε από ενόχληση αγκώνα· ελεγχόμενα λεπτά",
+    "confidence": "med"
+  },
+  {
+    "first": "David",
+    "last": "Lighty",
+    "flag": "neutral",
+    "note": "Βετεράνος, αμφίβολος ενεργός ρόλος· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Sergio",
+    "last": "Llull",
+    "flag": "neutral",
+    "note": "Βετεράνος: 5π & 4π, εκτός γ3· ελάχιστος ρόλος",
+    "confidence": "med"
+  },
+  {
+    "first": "Maodo",
+    "last": "Lo",
+    "flag": "neutral",
+    "note": "Λίγα λεπτά, μέτρια: 8π EFF10 & 3π EFF5· αδιάφορος στα φιλικά",
     "confidence": "med"
   },
   {
@@ -350,6 +1197,34 @@
     "confidence": "med"
   },
   {
+    "first": "Iffe",
+    "last": "Lundberg",
+    "flag": "neutral",
+    "note": "Βασικός γκαρντ αλλά ήρθε ο Lonnie Walker IV· απειλή usage, χωρίς νούμερα",
+    "confidence": "low"
+  },
+  {
+    "first": "Amath",
+    "last": "M'Baye",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Yam",
+    "last": "Madar",
+    "flag": "sleeper",
+    "note": "Ντεμπούτο 8/9· πέρσι 41π σε ντέρμπι — projFP 3.2 τον υποτιμά αν πάρει λεπτά",
+    "confidence": "med"
+  },
+  {
+    "first": "Melih",
+    "last": "Mahmutoglu",
+    "flag": "neutral",
+    "note": "Βετεράνος, οριακός ρόλος· projFP 0.1 σωστό",
+    "confidence": "low"
+  },
+  {
     "first": "Yoan",
     "last": "Makoundou",
     "flag": "injured",
@@ -364,10 +1239,45 @@
     "confidence": "med"
   },
   {
+    "first": "Theo",
+    "last": "Maledon",
+    "flag": "hot",
+    "note": "15π/7ασ & 14π· εκτός γ3 (ξεκούραση)· επιστροφή Campazzo κόβει χρήση",
+    "confidence": "med"
+  },
+  {
+    "first": "Eleftherios",
+    "last": "Mantzoukas",
+    "flag": "sleeper",
+    "note": "11π vs ΑΕΚ σε ροτέισον χωρίς βασικούς· φθηνός νεαρός",
+    "confidence": "low"
+  },
+  {
+    "first": "Vanja",
+    "last": "Marinkovic",
+    "flag": "injured",
+    "note": "Ρήξη αχίλλειου (Αύγ 26), εκτός· το projFP 3.6 υπερεκτιμά",
+    "confidence": "med"
+  },
+  {
     "first": "Tyrese",
     "last": "Martin",
     "flag": "hot",
     "note": "Starter/standout, 16π σε νίκη OT",
+    "confidence": "med"
+  },
+  {
+    "first": "Bodian",
+    "last": "Massa",
+    "flag": "neutral",
+    "note": "Νεαρός Γάλλος ουίνγκ, βάθος ρόστερ· χωρίς δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Garrison",
+    "last": "Mathews",
+    "flag": "hot",
+    "note": "13π vs Ερ.Αστέρα & 12π vs Στρασβούργο· καλός σκόρερ",
     "confidence": "med"
   },
   {
@@ -385,6 +1295,20 @@
     "confidence": "med"
   },
   {
+    "first": "Uros",
+    "last": "Mijailovic",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα από τα φιλικά",
+    "confidence": "low"
+  },
+  {
+    "first": "Stefan",
+    "last": "Miljenovic",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Codi",
     "last": "Miller-McIntyre",
     "flag": "neutral",
@@ -399,6 +1323,41 @@
     "confidence": "med"
   },
   {
+    "first": "Nikola",
+    "last": "Milutinov",
+    "flag": "neutral",
+    "note": "Εκτός ημιτελικού Κρήτης (ξεκούραση), πίσω στον τελικό· χωρίς τραυματισμό",
+    "confidence": "med"
+  },
+  {
+    "first": "Justin",
+    "last": "Minaya",
+    "flag": "neutral",
+    "note": "4π με Manresa· αμυντικός, χαμηλό σκοράρισμα",
+    "confidence": "med"
+  },
+  {
+    "first": "Davion",
+    "last": "Mintz",
+    "flag": "sleeper",
+    "note": "22' μεγάλος ρόλος vs Türk Telekom· λεπτά > τιμή 6.6",
+    "confidence": "med"
+  },
+  {
+    "first": "Konstantinos",
+    "last": "Mitoglou",
+    "flag": "neutral",
+    "note": "Ενεργός, στην αποστολή Ρόδου· χωρίς αναφορά στατιστικών",
+    "confidence": "med"
+  },
+  {
+    "first": "Chima",
+    "last": "Moneke",
+    "flag": "neutral",
+    "note": "Κορυφαίο projFP, βασικός φόργουορντ, αλλά καμία κάλυψη φιλικών",
+    "confidence": "med"
+  },
+  {
     "first": "Jean",
     "last": "Montero",
     "flag": "hot",
@@ -406,10 +1365,38 @@
     "confidence": "med"
   },
   {
+    "first": "Omari",
+    "last": "Moore",
+    "flag": "sleeper",
+    "note": "Κορυφαίος σε valoración (19) vs Θαραγόσα με 7π· projFP 7.7 τον υποτιμά",
+    "confidence": "med"
+  },
+  {
+    "first": "Wendell",
+    "last": "Moore Jr",
+    "flag": "sleeper",
+    "note": "MVP με Πεζάρο (17π), 15 & 13 στα άλλα· το projFP 8.2 τον υποτιμά",
+    "confidence": "high"
+  },
+  {
     "first": "Conor",
     "last": "Morgan",
     "flag": "neutral",
     "note": "Rotation forward, 8π",
+    "confidence": "med"
+  },
+  {
+    "first": "Jeremy",
+    "last": "Morgan",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Johnathan",
+    "last": "Motley",
+    "flag": "neutral",
+    "note": "Υπέγραψε επίσημα· χωρίς στοιχεία φιλικών",
     "confidence": "med"
   },
   {
@@ -420,10 +1407,80 @@
     "confidence": "med"
   },
   {
+    "first": "David",
+    "last": "Mutaf",
+    "flag": "neutral",
+    "note": "Καμία αναφορά· νεαρός, βαθύς πάγκος",
+    "confidence": "low"
+  },
+  {
+    "first": "Mario",
+    "last": "Nakic",
+    "flag": "neutral",
+    "note": "Επέστρεψε από πολύμηνο τραυματισμό· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Eli",
+    "last": "Ndiaye",
+    "flag": "neutral",
+    "note": "10π γ1 αλλά εκτός ροτέισον μόλις γύρισαν οι διεθνείς",
+    "confidence": "med"
+  },
+  {
+    "first": "Mbaye",
+    "last": "Ndiaye",
+    "flag": "hot",
+    "note": "MVP τελικού Κρήτης (16π/4ρ) + 16π· εκρηκτικός και φθηνός (7.5)",
+    "confidence": "high"
+  },
+  {
+    "first": "Josh",
+    "last": "Nebo",
+    "flag": "neutral",
+    "note": "Βασικός σέντερ αλλά μόλις 1π με Manresa· ανταγωνισμός Balcerowski",
+    "confidence": "med"
+  },
+  {
+    "first": "Omiros",
+    "last": "Netzipoglou",
+    "flag": "neutral",
+    "note": "Χωρίς δεδομένα προετοιμασίας, βαθύς πάγκος",
+    "confidence": "low"
+  },
+  {
+    "first": "Olivier",
+    "last": "Nkamboua",
+    "flag": "neutral",
+    "note": "8π με Manresa, σταθερός· τίποτα εντυπωσιακό",
+    "confidence": "med"
+  },
+  {
     "first": "Miles",
     "last": "Norris",
     "flag": "sleeper",
     "note": "20+ λεπτά νωρίς ως νέος — app AVOID 4.0",
+    "confidence": "med"
+  },
+  {
+    "first": "Jaylen",
+    "last": "Nowell",
+    "flag": "hot",
+    "note": "Ενεργός, σκόραρε στη νίκη vs TOFAS (29/8)· βασικός σκόρερ",
+    "confidence": "med"
+  },
+  {
+    "first": "Frank",
+    "last": "Ntilikina",
+    "flag": "neutral",
+    "note": "Αμυντικός κόμπο γκαρντ, χαμηλή παραγωγή (projFP 2.5 ρεαλιστικό)",
+    "confidence": "med"
+  },
+  {
+    "first": "Juan",
+    "last": "Nunez",
+    "flag": "sleeper",
+    "note": "6π με Manresa· το projFP -1.8 τον υποτιμά χονδροειδώς",
     "confidence": "med"
   },
   {
@@ -434,11 +1491,32 @@
     "confidence": "high"
   },
   {
+    "first": "Jordan",
+    "last": "Nwora",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Andreas",
     "last": "Obst",
     "flag": "neutral",
     "note": "Βασικός σουτέρ Μπάγερν (ως 2029)· ίσως απών λόγω EuroBasket",
     "confidence": "med"
+  },
+  {
+    "first": "Tai",
+    "last": "Odiase",
+    "flag": "sleeper",
+    "note": "12π/6ρ PIR20 σε 17' vs Partizan· backup σέντερ, projFP 3.7 χαμηλό",
+    "confidence": "med"
+  },
+  {
+    "first": "Semi",
+    "last": "Ojeleye",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
   },
   {
     "first": "Chuma",
@@ -455,11 +1533,74 @@
     "confidence": "low"
   },
   {
+    "first": "Eugene",
+    "last": "Omoruyi",
+    "flag": "neutral",
+    "note": "Ενεργός βασικός· υποτονικός στην ήττα vs Dubai (6/9)",
+    "confidence": "med"
+  },
+  {
+    "first": "Dylan",
+    "last": "Osetkowski",
+    "flag": "neutral",
+    "note": "Βασικός με 8π & 2 τρίποντα στο ντεμπούτο, σταθερός",
+    "confidence": "med"
+  },
+  {
+    "first": "Ercan",
+    "last": "Osmani",
+    "flag": "trap",
+    "note": "Καμία εμφάνιση σε 4 φιλικά (πιθ. εθνική)· υψηλό projFP = ρίσκο",
+    "confidence": "low"
+  },
+  {
+    "first": "Dan",
+    "last": "Oturu",
+    "flag": "hot",
+    "note": "Βασικός σέντερ, 10π/5ρ PIR14 vs Partizan· σταθερή παραγωγή",
+    "confidence": "med"
+  },
+  {
+    "first": "Yakuba",
+    "last": "Ouattara",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Alessandro",
+    "last": "Pajola",
+    "flag": "neutral",
+    "note": "5ασ κόντρα Χάποελ· αμυντικός γκαρντ, χαμηλό σκοράρισμα",
+    "confidence": "med"
+  },
+  {
+    "first": "Guy",
+    "last": "Palatin",
+    "flag": "neutral",
+    "note": "Δεν εμφανίστηκε στα φιλικά· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
     "first": "Georgios",
     "last": "Papagiannis",
     "flag": "injured",
     "note": "Τραυματίας, αμφίβολος & για πρεμιέρα",
     "confidence": "high"
+  },
+  {
+    "first": "Kostas",
+    "last": "Papanikolaou",
+    "flag": "neutral",
+    "note": "Εκτός τελικού Κρήτης, περιορισμένος ρόλος",
+    "confidence": "low"
+  },
+  {
+    "first": "Joel",
+    "last": "Parra",
+    "flag": "sleeper",
+    "note": "15π με Manresa (2ος σκόρερ)· πάνω από το χαμηλό projFP 5.7",
+    "confidence": "med"
   },
   {
     "first": "Maozinha",
@@ -469,6 +1610,55 @@
     "confidence": "low"
   },
   {
+    "first": "Alec",
+    "last": "Peters",
+    "flag": "hot",
+    "note": "Βασικός & ηγέτης· 11π+11ρ vs Φενέρ, 9π vs Ερ.Αστέρα",
+    "confidence": "high"
+  },
+  {
+    "first": "Filip",
+    "last": "Petrusev",
+    "flag": "hot",
+    "note": "PIR27 (21π 9/10, 6ρ) 25' vs Türk Telekom· κορυφαίος και φθηνός",
+    "confidence": "high"
+  },
+  {
+    "first": "Yves",
+    "last": "Pons",
+    "flag": "neutral",
+    "note": "Αθλητικός αμυντικός ουίνγκ· χωρίς δεδομένα preseason",
+    "confidence": "low"
+  },
+  {
+    "first": "Jaime",
+    "last": "Pradilla",
+    "flag": "neutral",
+    "note": "Ξεκίνησε γ3 αλλά μόλις 2&2π· ρόλος ναι, παραγωγή χαμηλή",
+    "confidence": "med"
+  },
+  {
+    "first": "Klemen",
+    "last": "Prepelic",
+    "flag": "neutral",
+    "note": "10' 2π· πίσω από Wright/Walkup, μειωμένος ρόλος",
+    "confidence": "med"
+  },
+  {
+    "first": "Gabriele",
+    "last": "Procida",
+    "flag": "sleeper",
+    "note": "16π/8ρ/24 PIR γ1, βασικός· projFP 0.8 τον υποτιμά δραματικά",
+    "confidence": "med"
+  },
+  {
+    "first": "Josep",
+    "last": "Puerto",
+    "flag": "neutral",
+    "note": "3π με κρίσιμο τρίποντο στο ντεμπούτο vs Θαραγόσα",
+    "confidence": "med"
+  },
+  {
     "first": "Kevin",
     "last": "Punter",
     "flag": "hot",
@@ -476,10 +1666,45 @@
     "confidence": "med"
   },
   {
+    "first": "William",
+    "last": "Rayman",
+    "flag": "neutral",
+    "note": "Περιθωριακός φορ βαθιάς ρότας· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Nathan",
+    "last": "Reuvers",
+    "flag": "neutral",
+    "note": "Βασικός, μόλις 2π στο ντεμπούτο vs Θαραγόσα",
+    "confidence": "med"
+  },
+  {
+    "first": "Jared",
+    "last": "Rhoden",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Giampaolo",
+    "last": "Ricci",
+    "flag": "neutral",
+    "note": "Εθνική, μόλις 3π vs Στρασβούργο· βαθύς πάγκος",
+    "confidence": "low"
+  },
+  {
     "first": "Justin",
     "last": "Robinson",
     "flag": "hot",
     "note": "17π, οδήγησε Μπάρτσα σε τελικό Lliga Catalana· βασικός Νο5",
+    "confidence": "high"
+  },
+  {
+    "first": "Nikos",
+    "last": "Rogkavopoulos",
+    "flag": "injured",
+    "note": "Τραυματίας τετρακέφαλου, εκτός Ρόδου",
     "confidence": "high"
   },
   {
@@ -490,10 +1715,52 @@
     "confidence": "med"
   },
   {
+    "first": "Mario",
+    "last": "Saint-Supery",
+    "flag": "neutral",
+    "note": "Απών στο ντεμπούτο, πίσω από Shorts/Cardenas",
+    "confidence": "low"
+  },
+  {
     "first": "Neal",
     "last": "Sako",
-    "flag": "sleeper",
-    "note": "Υγιής ενεργός rotation big — app AVOID",
+    "flag": "injured",
+    "note": "Τραυματίας (ηβική, από εθνική), εκτός EncestaRias· ρίσκο",
+    "confidence": "med"
+  },
+  {
+    "first": "Sertac",
+    "last": "Sanli",
+    "flag": "neutral",
+    "note": "Επέστρεψε ως 3ος σέντερ· ελάχιστος ρόλος",
+    "confidence": "low"
+  },
+  {
+    "first": "Ignas",
+    "last": "Sargiunas",
+    "flag": "trap",
+    "note": "Πολύ γεμάτη περιφέρεια· ρόλος περιορισμένος",
+    "confidence": "low"
+  },
+  {
+    "first": "Dario",
+    "last": "Saric",
+    "flag": "hot",
+    "note": "Και στα 4 φιλικά: 12,11,15,16π + double-double· βασικός σε φόρμα",
+    "confidence": "high"
+  },
+  {
+    "first": "Olivier",
+    "last": "Sarr",
+    "flag": "neutral",
+    "note": "Ντεμπούτο 6π/9ρ, ξεκίνησε γ2 11π· σταθερός βοηθός σέντερ",
+    "confidence": "med"
+  },
+  {
+    "first": "Tomas",
+    "last": "Satoransky",
+    "flag": "neutral",
+    "note": "~17' 9π αλλά 4 λάθη vs Partizan· μοιράζεται μπάλα με Μίτσιτς",
     "confidence": "med"
   },
   {
@@ -504,10 +1771,52 @@
     "confidence": "high"
   },
   {
+    "first": "Itay",
+    "last": "Segev",
+    "flag": "neutral",
+    "note": "Δεν εμφανίστηκε στα φιλικά· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Nathan",
+    "last": "Sestina",
+    "flag": "sleeper",
+    "note": "Επιβεβ. στρετς-4· projFP 1.5 τον γράφει, ASVEL λεπτή στα ψηλά",
+    "confidence": "low"
+  },
+  {
+    "first": "Enzo",
+    "last": "Shahrvin",
+    "flag": "neutral",
+    "note": "Νεαρός βαθύς σέντερ· χωρίς στοιχεία",
+    "confidence": "low"
+  },
+  {
+    "first": "Tornike",
+    "last": "Shengelia",
+    "flag": "neutral",
+    "note": "Βασικός, 7π/2ασ σε 17' vs Türk Telekom· μπαίνει σε φόρμα",
+    "confidence": "med"
+  },
+  {
+    "first": "Shavon",
+    "last": "Shields",
+    "flag": "hot",
+    "note": "11π στο ντεμπούτο· βασικός φορ σε ανανεωμένο ρόστερ",
+    "confidence": "med"
+  },
+  {
     "first": "Tj",
     "last": "Shorts",
     "flag": "sleeper",
     "note": "Βασικός PG, 13π/18 αξιολ. στο ντεμπούτο· η projFP 9.1 αδικαιολόγητα χαμηλή",
+    "confidence": "med"
+  },
+  {
+    "first": "Max",
+    "last": "Shulga",
+    "flag": "hot",
+    "note": "Ντεμπούτο 15π ως βασικός· νέος βασικός σε τιμή 8.0",
     "confidence": "med"
   },
   {
@@ -518,10 +1827,38 @@
     "confidence": "low"
   },
   {
+    "first": "Yankuba",
+    "last": "Sima",
+    "flag": "sleeper",
+    "note": "Έχασε το ντεμπούτο· ο τραυματισμός του Σάκο ανοίγει λεπτά στο 5",
+    "confidence": "low"
+  },
+  {
+    "first": "Kobi",
+    "last": "Simmons",
+    "flag": "neutral",
+    "note": "Βασικός PG (λύθηκε θέμα διαβατηρίου)· χωρίς στατιστικά",
+    "confidence": "med"
+  },
+  {
+    "first": "Deividas",
+    "last": "Sirvydis",
+    "flag": "neutral",
+    "note": "DNP vs Sabah· 8π EFF5 vs Vroclav· μέτριος, οριακός ρόλος",
+    "confidence": "med"
+  },
+  {
     "first": "Mady",
     "last": "Sissoko",
     "flag": "injured",
     "note": "Συμβόλαιο πάγωσε (health), καμία εμφάνιση",
+    "confidence": "high"
+  },
+  {
+    "first": "Dustin",
+    "last": "Sleva",
+    "flag": "sleeper",
+    "note": "Δυνατός σκόρερ: 17π EFF22 vs Vroclav & 10π vs Sabah· φθηνός & υποτιμημένος",
     "confidence": "high"
   },
   {
@@ -530,6 +1867,34 @@
     "flag": "injured",
     "note": "Τραυματίας, δεν αγωνίστηκε στο φιλικό με ΑΕΚ (11/9)",
     "confidence": "high"
+  },
+  {
+    "first": "Roman",
+    "last": "Sorkin",
+    "flag": "hot",
+    "note": "19π στο ντεμπούτο (95-81 Ρίσον) μετά την εθνική· ενεργός",
+    "confidence": "med"
+  },
+  {
+    "first": "Matteo",
+    "last": "Spagnolo",
+    "flag": "neutral",
+    "note": "Ενεργός· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Lamar",
+    "last": "Stevens",
+    "flag": "sleeper",
+    "note": "PIR23 (16π,8ρ) κόντρα Ζενίτ· κορυφαίος, υποτιμημένος",
+    "confidence": "med"
+  },
+  {
+    "first": "Dj",
+    "last": "Stewart",
+    "flag": "neutral",
+    "note": "Στο ρόστερ, ενεργός· χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
   },
   {
     "first": "Matthew",
@@ -546,11 +1911,67 @@
     "confidence": "low"
   },
   {
+    "first": "Terry",
+    "last": "Tarpey",
+    "flag": "neutral",
+    "note": "Βετεράνος αμυντικός, χαμηλός ρόλος· χωρίς στοιχεία",
+    "confidence": "low"
+  },
+  {
+    "first": "Walter",
+    "last": "Tavares",
+    "flag": "hot",
+    "note": "Επέστρεψε από γόνατο: 17π/6ρ/24 PIR· άγκυρα, ελεγχ. λεπτά",
+    "confidence": "high"
+  },
+  {
+    "first": "Kameron",
+    "last": "Taylor",
+    "flag": "neutral",
+    "note": "Βασικός αλλά μόλις 5π στο ντεμπούτο vs Θαραγόσα· projFP 16.3 απαιτητικό",
+    "confidence": "med"
+  },
+  {
+    "first": "Daniel",
+    "last": "Theis",
+    "flag": "neutral",
+    "note": "Ντεμπούτο 8/9 μετά εθνική Γερμανίας· φορτωμένη 5άδα, χωρίς νούμερα",
+    "confidence": "low"
+  },
+  {
+    "first": "Johannes",
+    "last": "Thiemann",
+    "flag": "trap",
+    "note": "Μόλις 2π (+6ρ) από πάγκο vs Bamberg πίσω από Wiley· projFP 10.2 αισιόδοξο",
+    "confidence": "med"
+  },
+  {
     "first": "Ethan",
     "last": "Thompson",
     "flag": "neutral",
     "note": "Επίσημα Παρτίζαν 16/8· ο Vildoza απειλεί τα λεπτά του",
     "confidence": "low"
+  },
+  {
+    "first": "Darius",
+    "last": "Thompson",
+    "flag": "neutral",
+    "note": "Έχασε πρεμιέρα (εθνική)· 5π & 2π, περιορισμένος ρόλος",
+    "confidence": "med"
+  },
+  {
+    "first": "Bar",
+    "last": "Timor",
+    "flag": "neutral",
+    "note": "18' 4π/4ρ vs Balkan αλλά εκτός vs Partizan· ασταθής ρόλος",
+    "confidence": "med"
+  },
+  {
+    "first": "Stefano",
+    "last": "Tonut",
+    "flag": "sleeper",
+    "note": "4π & 6π από πάγκο· projFP 1.2 υπερβολικά χαμηλό για rotation γκαρντ",
+    "confidence": "med"
   },
   {
     "first": "Jacob",
@@ -560,10 +1981,80 @@
     "confidence": "low"
   },
   {
+    "first": "Azuolas",
+    "last": "Tubelis",
+    "flag": "neutral",
+    "note": "Ενεργός & αποδοτικός (12&8π) αλλά ~12'/ματς περιορίζουν το 13.2 proj",
+    "confidence": "high"
+  },
+  {
+    "first": "Agustin",
+    "last": "Ubal",
+    "flag": "neutral",
+    "note": "Νεαρός, 4π με Manresa· μικρός ρόλος",
+    "confidence": "low"
+  },
+  {
+    "first": "Edgaras",
+    "last": "Ulanovas",
+    "flag": "sleeper",
+    "note": "Κορυφαίος: 18π/7ασ EFF27 vs Sabah & 12π vs Vroclav· το 5.7 proj τον αδικεί",
+    "confidence": "high"
+  },
+  {
+    "first": "Stanley",
+    "last": "Umude",
+    "flag": "neutral",
+    "note": "Ενεργός, 5π στη νίκη με Manresa· μέτρια εμφάνιση",
+    "confidence": "med"
+  },
+  {
+    "first": "Jonas",
+    "last": "Valanciunas",
+    "flag": "hot",
+    "note": "Παίζει· θλάση ποδιού vs Sabah μα επέστρεψε 12π/7ρ EFF26 vs Vroclav",
+    "confidence": "high"
+  },
+  {
+    "first": "Elias",
+    "last": "Valtonen",
+    "flag": "neutral",
+    "note": "5π στο ντεμπούτο vs Θαραγόσα, ενεργός",
+    "confidence": "med"
+  },
+  {
+    "first": "Sasha",
+    "last": "Vezenkov",
+    "flag": "hot",
+    "note": "Επέστρεψε 11/9 με νικητήριο τρίποντο vs Ερυθρό· κορυφαία φόρμα",
+    "confidence": "high"
+  },
+  {
+    "first": "Luca",
+    "last": "Vildoza",
+    "flag": "sleeper",
+    "note": "8ασ vs Ζενίτ, 12π+PIR13 vs Χάποελ· βασικός πλέι, υποτιμημένος",
+    "confidence": "med"
+  },
+  {
     "first": "Johannes",
     "last": "Voigtmann",
     "flag": "sleeper",
     "note": "11π vs Ulm, υγιής rotation — app AVOID 4.9",
+    "confidence": "high"
+  },
+  {
+    "first": "Ish",
+    "last": "Wainright",
+    "flag": "sleeper",
+    "note": "13π PIR16 (3/3 τρίπ.) 17' vs Partizan· projFP 3.2 τον υποτιμά πολύ",
+    "confidence": "med"
+  },
+  {
+    "first": "Thomas",
+    "last": "Walkup",
+    "flag": "trap",
+    "note": "Μεταγράφηκε στην Ντουμπάι, εκτός Ολυμπιακού",
     "confidence": "high"
   },
   {
@@ -574,11 +2065,67 @@
     "confidence": "med"
   },
   {
+    "first": "Tyson",
+    "last": "Ward",
+    "flag": "neutral",
+    "note": "Χωρίς αξιόπιστα δεδομένα προετοιμασίας",
+    "confidence": "low"
+  },
+  {
+    "first": "Tj",
+    "last": "Warren",
+    "flag": "neutral",
+    "note": "Υπέγραψε ως βασικός σκόρερ αλλά χωρίς στοιχεία φιλικών & ιστορικό τραυμ.",
+    "confidence": "med"
+  },
+  {
     "first": "Duane",
     "last": "Washington",
     "flag": "sleeper",
     "note": "Από Παρτίζαν στη Μπάγερν (16.4π, 39.6% 3ρ)· projFP 9.5 χαμηλό",
     "confidence": "low"
+  },
+  {
+    "first": "Tyty",
+    "last": "Washington",
+    "flag": "neutral",
+    "note": "Επιβεβ. μεταγραφή (πρώην NBA)· πολυπληθής γκαρντ γραμμή, χωρίς box",
+    "confidence": "low"
+  },
+  {
+    "first": "Tremont",
+    "last": "Waters",
+    "flag": "neutral",
+    "note": "Νέος πλέι (ρούκι EL)· γεμάτη γκαρντ γραμμή, χωρίς αξιόπιστα δεδομένα",
+    "confidence": "low"
+  },
+  {
+    "first": "Nick",
+    "last": "Weiler-Babb",
+    "flag": "neutral",
+    "note": "Υπέγραψε επίσημα· χωρίς στοιχεία φιλικών",
+    "confidence": "med"
+  },
+  {
+    "first": "Scottie",
+    "last": "Wilbekin",
+    "flag": "neutral",
+    "note": "Γεμάτο μπακ-κορτ + ιστορικό ACL· περιορισμένος ρόλος",
+    "confidence": "med"
+  },
+  {
+    "first": "Austin",
+    "last": "Wiley",
+    "flag": "hot",
+    "note": "12π+9ρ στο 1ο φιλικό, βασικός σέντερ vs Bamberg· double-double απειλή",
+    "confidence": "high"
+  },
+  {
+    "first": "Nigel",
+    "last": "Williams-Goss",
+    "flag": "hot",
+    "note": "Βασικός πλέι: 6π/5ρ/8ασ EFF17 vs Sabah· DNP vs Vroclav (rotation)",
+    "confidence": "med"
   },
   {
     "first": "Derek",
@@ -588,6 +2135,13 @@
     "confidence": "med"
   },
   {
+    "first": "Moses",
+    "last": "Wright",
+    "flag": "hot",
+    "note": "22π double-double vs Ερ.Αστέρα, 20π vs Φενέρ· ο κορυφαίος big",
+    "confidence": "high"
+  },
+  {
     "first": "McKinley",
     "last": "Wright IV",
     "flag": "hot",
@@ -595,10 +2149,31 @@
     "confidence": "med"
   },
   {
+    "first": "Guerschon",
+    "last": "Yabusele",
+    "flag": "neutral",
+    "note": "Ενεργός, ανεπίσημο ντεμπούτο στη Ρόδο· χωρίς στατιστικά vs ΑΕΚ",
+    "confidence": "med"
+  },
+  {
+    "first": "Erkan",
+    "last": "Yilmaz",
+    "flag": "neutral",
+    "note": "Καμία αναφορά σε 4 φιλικά· βαθύς πάγκος",
+    "confidence": "low"
+  },
+  {
     "first": "Santi",
     "last": "Yusta",
     "flag": "neutral",
     "note": "12π (έχασε 1 για εθνική)",
+    "confidence": "med"
+  },
+  {
+    "first": "Ante",
+    "last": "Zizic",
+    "flag": "injured",
+    "note": "Χειρουργείο ώμου (AC joint), δεν έπαιξε φιλικά· αμφίβολος για αρχή",
     "confidence": "med"
   }
 ]

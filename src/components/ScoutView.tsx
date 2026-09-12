@@ -339,8 +339,11 @@ function RecsTab({
                 {p.proj && (
                   <span className="chip" style={recChip(p.proj.recommendation)}>{REC_STYLE[p.proj.recommendation]?.label ?? "—"}</span>
                 )}
+                {p.preseason && <PreseasonBadge flag={p.preseason.flag} />}
               </div>
-              <div className="mt-0.5 truncate text-[11px] text-slate-500">{p.proj?.rationale}</div>
+              <div className="mt-0.5 truncate text-[11px] text-slate-500">
+                {p.preseason ? <span className="text-slate-400">🗓 {p.preseason.note}</span> : p.proj?.rationale}
+              </div>
             </div>
             <div className="shrink-0 text-right">
               <div className="stat text-sm font-bold text-white">{intentReason(p, intent)}</div>
@@ -576,4 +579,19 @@ function Select({ label, value, onChange, options }: { label: string; value: str
       </select>
     </label>
   );
+}
+
+// Preseason flag badge — offseason-friendlies signal (💎 sleeper, ⚠️ trap, 🚑 injured, 🔥 hot).
+const PRESEASON_FLAG: Record<string, { emoji: string; label: string; cls: string }> = {
+  hot: { emoji: "🔥", label: "HOT", cls: "bg-brand-500/15 text-brand-300 ring-1 ring-brand-500/30" },
+  sleeper: { emoji: "💎", label: "SLEEPER", cls: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30" },
+  trap: { emoji: "⚠️", label: "TRAP", cls: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30" },
+  injured: { emoji: "🚑", label: "OUT", cls: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30" },
+  neutral: { emoji: "🗓", label: "PRE", cls: "bg-white/5 text-slate-400" },
+};
+
+function PreseasonBadge({ flag }: { flag: string }) {
+  const f = PRESEASON_FLAG[flag] ?? PRESEASON_FLAG.neutral;
+  if (flag === "neutral") return null; // note still shows in the subline
+  return <span className={`chip ${f.cls}`}>{f.emoji} {f.label}</span>;
 }

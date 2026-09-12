@@ -63,11 +63,19 @@ export interface PlayerDTO {
     rationale: string;
     projectedRole: string;
   } | null;
+  // Preseason scouting note (offseason friendlies research)
+  preseason?: {
+    flag: string; // hot | sleeper | trap | injured | neutral
+    note: string;
+    confidence: string;
+    updatedAt: string;
+  } | null;
 }
 
 const playerInclude = {
   team: true,
   projection: true,
+  preseasonNote: true,
   seasonStats: { orderBy: { season: "desc" as const } },
 };
 
@@ -110,6 +118,12 @@ export function toPlayerDTO(p: any): PlayerDTO {
           ownershipPrediction: p.projection.ownershipPrediction,
           recommendation: p.projection.recommendation, signal: p.projection.signal,
           rationale: p.projection.rationale, projectedRole: p.projection.projectedRole,
+        }
+      : null,
+    preseason: p.preseasonNote
+      ? {
+          flag: p.preseasonNote.flag, note: p.preseasonNote.note,
+          confidence: p.preseasonNote.confidence, updatedAt: p.preseasonNote.updatedAt.toISOString(),
         }
       : null,
   };

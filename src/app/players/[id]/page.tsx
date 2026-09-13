@@ -81,6 +81,13 @@ export default async function PlayerPage({ params }: { params: { id: string } })
             <span className="font-semibold text-brand-300">Engine verdict: </span>{proj.rationale}
           </div>
         )}
+        {player.preseason?.note && !/^χωρ[ίι]ς/i.test(player.preseason.note) && (
+          <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-200">
+            <span className="font-semibold text-slate-300">🗓 Preseason: </span>
+            <PreTag flag={player.preseason.flag} />
+            <span className="ml-1">{player.preseason.note}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -239,4 +246,17 @@ function ProjStat({ label, proj, last, highlight }: { label: string; proj?: numb
       )}
     </div>
   );
+}
+
+// Preseason flag tag (server component) — matches Scout/Draft/Players.
+function PreTag({ flag }: { flag?: string | null }) {
+  const M: Record<string, { emoji: string; label: string; cls: string }> = {
+    hot: { emoji: "🔥", label: "HOT", cls: "bg-brand-500/15 text-brand-300 ring-1 ring-brand-500/30" },
+    sleeper: { emoji: "💎", label: "SLEEPER", cls: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30" },
+    trap: { emoji: "⚠️", label: "TRAP", cls: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30" },
+    injured: { emoji: "🚑", label: "OUT", cls: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30" },
+  };
+  if (!flag || !M[flag]) return null;
+  const f = M[flag];
+  return <span className={`chip ${f.cls}`}>{f.emoji} {f.label}</span>;
 }

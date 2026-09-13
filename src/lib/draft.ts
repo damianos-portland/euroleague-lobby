@@ -68,6 +68,8 @@ export interface DraftablePlayer {
   projFantasyPoints: number;
   floorFP: number; // cold-day fantasy floor
   ceilingFP: number; // hot-day fantasy ceiling
+  preseasonFlag: string | null; // hot | sleeper | trap | injured | neutral
+  preseasonNote: string | null;
   valueScore: number;
   upsideScore: number;
   consistencyScore: number;

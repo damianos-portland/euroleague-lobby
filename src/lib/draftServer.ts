@@ -47,6 +47,8 @@ function toDraftable(p: any): DraftablePlayer {
     projFantasyPoints: proj?.projFantasyPoints ?? 0,
     floorFP: range.floor,
     ceilingFP: range.ceiling,
+    preseasonFlag: p.preseasonNote?.flag ?? null,
+    preseasonNote: p.preseasonNote?.note ?? null,
     valueScore: proj?.valueScore ?? 0,
     upsideScore: proj?.upsideScore ?? 0,
     consistencyScore: proj?.consistencyScore ?? 0,
@@ -65,6 +67,7 @@ const PLAYER_SELECT = {
   fantasyPrice: true,
   age: true, // for the floor/ceiling swing
   team: { select: { shortName: true } },
+  preseasonNote: { select: { flag: true, note: true } },
   projection: {
     select: {
       projFantasyPoints: true,

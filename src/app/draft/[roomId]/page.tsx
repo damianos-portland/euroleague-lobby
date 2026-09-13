@@ -250,7 +250,12 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
                   const inQueue = (you?.queue ?? []).some((qp: DraftablePlayer) => qp.id === p.id);
                   return (
                     <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="td"><Link href={`/players/${p.id}`} className="font-semibold text-white hover:text-brand-400">{p.name}</Link></td>
+                      <td className="td">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Link href={`/players/${p.id}`} className="font-semibold text-white hover:text-brand-400">{p.name}</Link>
+                          <PreBadge flag={p.preseasonFlag} note={p.preseasonNote} />
+                        </span>
+                      </td>
                       <td className="td"><PosBadge pos={p.position} /></td>
                       <td className="td text-slate-400">{p.teamShort ?? "FA"}</td>
                       <td className="td text-right stat">{p.fantasyPrice.toFixed(1)}</td>
@@ -389,7 +394,11 @@ export default function DraftRoomPage({ params }: { params: { roomId: string } }
             <div className="mt-2 flex items-center gap-2">
               <PosBadge pos={pendingPick.position} />
               <span className="text-lg font-extrabold text-white">{pendingPick.name}</span>
+              <PreBadge flag={pendingPick.preseasonFlag} full />
             </div>
+            {pendingPick.preseasonNote && (
+              <div className="mt-1 text-[11px] text-slate-300">🗓 {pendingPick.preseasonNote}</div>
+            )}
             <div className="mt-1 text-xs text-slate-400">
               {pendingPick.teamShort ?? "FA"} · {pendingPick.projFantasyPoints.toFixed(1)} proj FP · {pendingPick.fantasyPrice.toFixed(1)}cr
               <span className="ml-1 text-slate-500">→ {state.onTheClock?.teamName}</span>
@@ -526,8 +535,12 @@ function DraftBoard({ state, youId }: { state: any; youId?: string }) {
           <div className="flex items-center gap-2">
             <PosBadge pos={sel.player.position} />
             <span className="text-lg font-extrabold text-white">{sel.player.name}</span>
+            <PreBadge flag={sel.player.preseasonFlag} full />
           </div>
           <div className="mt-0.5 text-xs text-slate-400">{sel.player.teamShort ?? "FA"} · {sel.player.fantasyPrice.toFixed(1)}cr</div>
+          {sel.player.preseasonNote && (
+            <div className="mt-1.5 rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-[11px] text-slate-300">🗓 {sel.player.preseasonNote}</div>
+          )}
 
           <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-xs">
             <div className="flex items-center justify-between">
@@ -572,5 +585,24 @@ function DraftBoard({ state, youId }: { state: any; youId?: string }) {
       </div>
     )}
     </>
+  );
+}
+
+// Preseason flag badge — mirrors the Scout signal (🔥 hot / 💎 sleeper / ⚠️ trap / 🚑 out).
+const PRE_FLAG: Record<string, { emoji: string; label: string; cls: string }> = {
+  hot: { emoji: "🔥", label: "HOT", cls: "bg-brand-500/15 text-brand-300 ring-1 ring-brand-500/30" },
+  sleeper: { emoji: "💎", label: "SLEEPER", cls: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30" },
+  trap: { emoji: "⚠️", label: "TRAP", cls: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30" },
+  injured: { emoji: "🚑", label: "OUT", cls: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30" },
+};
+
+function PreBadge({ flag, note, full = false }: { flag: string | null; note?: string | null; full?: boolean }) {
+  if (!flag || flag === "neutral") return null;
+  const f = PRE_FLAG[flag];
+  if (!f) return null;
+  return (
+    <span className={`chip ${f.cls}`} title={note ?? undefined}>
+      {f.emoji}{full ? ` ${f.label}` : ""}
+    </span>
   );
 }

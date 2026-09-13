@@ -149,9 +149,9 @@
   {
     "first": "Hugo",
     "last": "Besson",
-    "flag": "neutral",
-    "note": "Σκόρερ γκαρντ· έντονος ανταγωνισμός, χωρίς αξιόπιστα δεδομένα",
-    "confidence": "low"
+    "flag": "sleeper",
+    "note": "12π για ASVEL vs Bayern (12/9)· ανερχόμενος σκόρερ",
+    "confidence": "med"
   },
   {
     "first": "Marcus",
@@ -213,8 +213,8 @@
     "first": "Joel",
     "last": "Bolomboy",
     "flag": "sleeper",
-    "note": "Επανυπέγραψε 2ετές, σχεδόν μοναδικός σέντερ· projFP 6.6 χαμηλό για τα λεπτά",
-    "confidence": "low"
+    "note": "11π βασικός σέντερ ASVEL vs Bayern (12/9)· projFP 6.6 χαμηλό",
+    "confidence": "med"
   },
   {
     "first": "Isaac",
@@ -569,9 +569,9 @@
   {
     "first": "Chris",
     "last": "Duarte",
-    "flag": "neutral",
-    "note": "Επιβεβ. βασικός σκόρερ, υγιής· χωρίς box score φιλικών",
-    "confidence": "med"
+    "flag": "hot",
+    "note": "25π top scorer, εντυπωσιακός στην ανατροπή στον τελικό vs Βαλένθια (12/9)",
+    "confidence": "high"
   },
   {
     "first": "Amit",
@@ -626,7 +626,7 @@
     "first": "Kenneth",
     "last": "Faried",
     "flag": "neutral",
-    "note": "Υπέγραψε αργά (25/8), 36 ετών· αβέβαιη ενσωμάτωση",
+    "note": "Ντεμπούτο 11/9, σκόραρε σε ράλι Q4 στον τελικό (12/9)· εσωτερικός",
     "confidence": "low"
   },
   {
@@ -660,8 +660,8 @@
   {
     "first": "Diego",
     "last": "Flaccadori",
-    "flag": "neutral",
-    "note": "2-3-4π σε ελάχιστα λεπτά· βαθύς πάγκος",
+    "flag": "sleeper",
+    "note": "15π top scorer Μιλάνο vs ΠΑΟΚ (12/9)· projFP 0.7 τον υποτιμά",
     "confidence": "med"
   },
   {
@@ -780,7 +780,7 @@
     "first": "Marko",
     "last": "Guduric",
     "flag": "neutral",
-    "note": "Έχασε Κρήτη (εθνική), μόλις 3π vs Στρασβούργο· λίγα δεδομένα",
+    "note": "12π vs ΠΑΟΚ (12/9), σταθερός· τίποτα εκρηκτικό στην ήττα",
     "confidence": "med"
   },
   {
@@ -856,8 +856,8 @@
   {
     "first": "Justus",
     "last": "Hollatz",
-    "flag": "neutral",
-    "note": "Ξεκίνησε βασικός vs Bamberg αλλά 0π· ρόλος ναι, μηδενική παραγωγή",
+    "flag": "sleeper",
+    "note": "5ρ+5ασ playmaking vs ASVEL (12/9)· value χωρίς σκοράρισμα",
     "confidence": "med"
   },
   {
@@ -941,7 +941,7 @@
     "first": "Justinian",
     "last": "Jessup",
     "flag": "hot",
-    "note": "13π & 14π στα δύο φιλικά· σταθερός σουτέρ",
+    "note": "14π vs ASVEL (12/9), 14π & 13π· σταθερός σουτέρ",
     "confidence": "med"
   },
   {
@@ -1088,8 +1088,8 @@
     "first": "Rodions",
     "last": "Kurucs",
     "flag": "neutral",
-    "note": "Ενεργός· χωρίς αξιόπιστα δεδομένα",
-    "confidence": "low"
+    "note": "Εκτός τελικού (12/9) μετά το ματς vs ALBA (11/9)· αμφίβολος",
+    "confidence": "med"
   },
   {
     "first": "Arijan",
@@ -1129,9 +1129,9 @@
   {
     "first": "Aj",
     "last": "Lawson",
-    "flag": "neutral",
-    "note": "Στο ρόστερ, ενεργός· χωρίς αξιόπιστα δεδομένα",
-    "confidence": "low"
+    "flag": "sleeper",
+    "note": "Σκοράρισμα & τρίποντα, παρ' ολίγον νικητήριο στον τελικό (12/9)· projFP 8.0 χαμηλό",
+    "confidence": "med"
   },
   {
     "first": "Tj",
@@ -1193,7 +1193,7 @@
     "first": "Vladimir",
     "last": "Lucic",
     "flag": "neutral",
-    "note": "Established starter, 11π",
+    "note": "10π+4ασ vs ASVEL (12/9), 11π vs Bamberg· ήρεμος αρχηγός",
     "confidence": "med"
   },
   {
@@ -1318,8 +1318,8 @@
   {
     "first": "Patty",
     "last": "Mills",
-    "flag": "neutral",
-    "note": "Υπέγραψε ως FA, ρόλος rotation ~20' πάγκου· καμία διάκριση σε φιλικά",
+    "flag": "sleeper",
+    "note": "14π top scorer ASVEL vs Bayern (12/9)· βετεράνος ακόμη ζεστός",
     "confidence": "med"
   },
   {
@@ -1459,7 +1459,7 @@
     "first": "Miles",
     "last": "Norris",
     "flag": "sleeper",
-    "note": "20+ λεπτά νωρίς ως νέος — app AVOID 4.0",
+    "note": "14π+7ρ vs ASVEL (12/9)· νέος Bayern, projFP 4.0 τον υποτιμά",
     "confidence": "med"
   },
   {
@@ -1501,7 +1501,7 @@
     "first": "Andreas",
     "last": "Obst",
     "flag": "neutral",
-    "note": "Βασικός σουτέρ Μπάγερν (ως 2029)· ίσως απών λόγω EuroBasket",
+    "note": "Μόλις 4π vs ASVEL (12/9)· κρύο δείγμα, ίσως απών EuroBasket",
     "confidence": "med"
   },
   {
@@ -1676,7 +1676,7 @@
     "first": "Nathan",
     "last": "Reuvers",
     "flag": "neutral",
-    "note": "Βασικός, μόλις 2π στο ντεμπούτο vs Θαραγόσα",
+    "note": "Από τα βασικά όπλα Βαλένθια στον τελικό (12/9)· σκοράρισμα εσωτερικά",
     "confidence": "med"
   },
   {
@@ -1808,9 +1808,9 @@
   {
     "first": "Tj",
     "last": "Shorts",
-    "flag": "sleeper",
-    "note": "Βασικός PG, 13π/18 αξιολ. στο ντεμπούτο· η projFP 9.1 αδικαιολόγητα χαμηλή",
-    "confidence": "med"
+    "flag": "hot",
+    "note": "22π, οδήγησε & νικητήριες βολές στον τελικό 93-91 (12/9)· κορυφαία φόρμα",
+    "confidence": "high"
   },
   {
     "first": "Max",
@@ -1830,8 +1830,8 @@
     "first": "Yankuba",
     "last": "Sima",
     "flag": "sleeper",
-    "note": "Έχασε το ντεμπούτο· ο τραυματισμός του Σάκο ανοίγει λεπτά στο 5",
-    "confidence": "low"
+    "note": "Ενεργός εσωτερικά στον τελικό (12/9)· ο τραυμ. Σάκο του ανοίγει λεπτά",
+    "confidence": "med"
   },
   {
     "first": "Kobi",
@@ -1879,8 +1879,8 @@
     "first": "Matteo",
     "last": "Spagnolo",
     "flag": "neutral",
-    "note": "Ενεργός· χωρίς αξιόπιστα δεδομένα",
-    "confidence": "low"
+    "note": "Τρίποντο Q4 στον τελικό (12/9)· περιορισμένος ρόλος",
+    "confidence": "med"
   },
   {
     "first": "Lamar",
@@ -1892,9 +1892,9 @@
   {
     "first": "Dj",
     "last": "Stewart",
-    "flag": "neutral",
-    "note": "Στο ρόστερ, ενεργός· χωρίς αξιόπιστα δεδομένα",
-    "confidence": "low"
+    "flag": "hot",
+    "note": "19π, σοβαρός & θεμελιώδης στον τελικό (12/9)· δυνατή εμφάνιση",
+    "confidence": "high"
   },
   {
     "first": "Matthew",
@@ -2040,7 +2040,7 @@
     "first": "Johannes",
     "last": "Voigtmann",
     "flag": "sleeper",
-    "note": "11π vs Ulm, υγιής rotation — app AVOID 4.9",
+    "note": "10π+5ρ vs ASVEL (12/9), 11π vs Ulm· υγιής rotation, app AVOID 4.9",
     "confidence": "high"
   },
   {
@@ -2117,7 +2117,7 @@
     "first": "Austin",
     "last": "Wiley",
     "flag": "hot",
-    "note": "12π+9ρ στο 1ο φιλικό, βασικός σέντερ vs Bamberg· double-double απειλή",
+    "note": "11π+8ρ vs ASVEL (12/9) + 12π+9ρ· απειλή double-double",
     "confidence": "high"
   },
   {
@@ -2138,7 +2138,7 @@
     "first": "Moses",
     "last": "Wright",
     "flag": "hot",
-    "note": "22π double-double vs Ερ.Αστέρα, 20π vs Φενέρ· ο κορυφαίος big",
+    "note": "22π DD + 20π + 13π vs ΠΑΟΚ (12/9)· ο κορυφαίος big Μιλάνο",
     "confidence": "high"
   },
   {

@@ -51,8 +51,14 @@ export function PlayerExplorer({
       key: "name", label: "Player", align: "left", get: (p) => p.name,
       render: (p) => (
         <div className="flex flex-col">
-          <Link href={`/players/${p.id}`} className="font-semibold text-white hover:text-brand-400">{p.name}</Link>
+          <span className="inline-flex items-center gap-1.5">
+            <Link href={`/players/${p.id}`} className="font-semibold text-white hover:text-brand-400">{p.name}</Link>
+            <PrePlayerBadge flag={p.preseason?.flag} />
+          </span>
           <span className="text-[11px] text-slate-500">{p.nationality} · {p.age}y</span>
+          {p.preseason?.note && !/^χωρ[ίι]ς/i.test(p.preseason.note) && (
+            <span className="mt-0.5 max-w-[280px] text-[11px] leading-snug text-slate-400">🗓 {p.preseason.note}</span>
+          )}
         </div>
       ),
     };
@@ -233,4 +239,18 @@ function Select({
       </select>
     </div>
   );
+}
+
+// Preseason flag badge for the Players list (matches Scout/Draft).
+const PRE_FLAG_PL: Record<string, { emoji: string; label: string; cls: string }> = {
+  hot: { emoji: "🔥", label: "HOT", cls: "bg-brand-500/15 text-brand-300 ring-1 ring-brand-500/30" },
+  sleeper: { emoji: "💎", label: "SLEEPER", cls: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30" },
+  trap: { emoji: "⚠️", label: "TRAP", cls: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30" },
+  injured: { emoji: "🚑", label: "OUT", cls: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30" },
+};
+function PrePlayerBadge({ flag }: { flag?: string | null }) {
+  if (!flag || flag === "neutral") return null;
+  const f = PRE_FLAG_PL[flag];
+  if (!f) return null;
+  return <span className={`chip ${f.cls}`}>{f.emoji} {f.label}</span>;
 }

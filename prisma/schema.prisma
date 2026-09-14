@@ -37,6 +37,8 @@ model User {
   pushSubscriptions PushSubscription[]
   passwordResetTokens PasswordResetToken[]
   authenticators Authenticator[]
+  friendliesChallenged FriendlyMatch[] @relation("FMChallenger")
+  friendliesReceived   FriendlyMatch[] @relation("FMOpponent")
 }
 
 // A registered WebAuthn passkey (Face ID / Touch ID / Windows Hello / security
@@ -128,6 +130,39 @@ model Team {
 // ---------------------------------------------------------------------------
 // Players
 // ---------------------------------------------------------------------------
+
+// Head-to-head friendly simulation between two users. Each builds a 5+5 lineup;
+// the server generates the full play-by-play timeline once, and both clients
+// play it back synchronized to startedAt (so a match lasts ~5+ real minutes).
+model FriendlyMatch {
+  id            String   @id @default(cuid())
+  challengerId  String
+  challenger    User     @relation("FMChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
+  opponentId    String
+  opponent      User     @relation("FMOpponent", fields: [opponentId], references: [id], onDelete: Cascade)
+  // mode: "score" (basketball final score) | "fantasy" (total FP contest)
+  mode          String   @default("score")
+  // status: pending | building | live | complete | declined | cancelled
+  status        String   @default("pending")
+  challengerLineup String? // JSON { starters: [playerId x5], bench: [playerId x5] }
+  opponentLineup   String?
+  challengerReady  Boolean @default(false)
+  opponentReady    Boolean @default(false)
+  timeline      String?  // JSON of the generated play-by-play + box + finals
+  startedAt     DateTime?
+  challengerScore Int?
+  opponentScore   Int?
+  challengerFp    Float?
+  opponentFp      Float?
+  winnerId      String?
+  mvpPlayerId   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([challengerId])
+  @@index([opponentId])
+  @@index([status])
+}
 
 model Player {
   id        String  @id @default(cuid())

@@ -258,15 +258,20 @@ export function simulateMatch(
 }
 
 // Validate a 5+5 lineup: 5 starters with 2G/2F/1C, 5 bench, 10 distinct ids.
+// When `allowedIds` is given, every player must belong to it (the drafted roster).
 export function validateLineup(
   lineup: LineupJSON,
-  bucketOf: (id: string) => FantasyBucket | null
+  bucketOf: (id: string) => FantasyBucket | null,
+  allowedIds?: Set<string>
 ): { ok: true } | { ok: false; error: string } {
   const { starters, bench } = lineup;
   if (!Array.isArray(starters) || starters.length !== 5) return { ok: false, error: "Χρειάζονται 5 βασικοί." };
   if (!Array.isArray(bench) || bench.length !== BENCH_COUNT) return { ok: false, error: "Χρειάζονται 5 παίκτες στον πάγκο." };
   const all = [...starters, ...bench];
   if (new Set(all).size !== 10) return { ok: false, error: "Διπλότυποι παίκτες στη σύνθεση." };
+  if (allowedIds) {
+    for (const id of all) if (!allowedIds.has(id)) return { ok: false, error: "Παίκτης εκτός της ομάδας σου." };
+  }
   const counts: Record<FantasyBucket, number> = { G: 0, F: 0, C: 0 };
   for (const id of starters) {
     const b = bucketOf(id);

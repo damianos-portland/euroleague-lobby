@@ -1,7 +1,8 @@
 // ---------------------------------------------------------------------------
 // Server-side orchestration for friendly-match simulations (DB-backed).
-// Wraps the pure sim engine in lib/friendly.ts with persistence, lineup
-// validation, and web-push notifications.
+// A friendly is scoped to ONE draft room: each side plays the roster it drafted
+// there (its DraftParticipant's picks). Wraps the pure sim engine in
+// lib/friendly.ts with persistence, lineup validation, and web-push.
 // ---------------------------------------------------------------------------
 
 import { prisma } from "./db";
@@ -14,11 +15,15 @@ import {
   SimPlayerInput,
   MatchTimeline,
   MATCH_DURATION_MS,
+  STARTER_QUOTA,
+  BENCH_COUNT,
 } from "./friendly";
 
 export type FriendlyAction = "accept" | "decline" | "cancel" | "setLineup" | "ready";
 
-// Slim player row for lineup building — id, name, position, projection bits.
+// Minimum a drafted roster needs to field a legal 2G/2F/1C + 5 bench lineup.
+const MIN_TEAM_TOTAL = STARTER_QUOTA.G + STARTER_QUOTA.F + STARTER_QUOTA.C + BENCH_COUNT; // 10
+
 const POOL_SELECT = {
   id: true,
   firstName: true,
@@ -39,27 +44,103 @@ export interface PoolPlayer {
   projFantasyPoints: number;
 }
 
-// The full pool a user picks a lineup from (all players, once, cached client-side).
-export async function loadFriendlyPool(): Promise<PoolPlayer[]> {
-  const rows = await prisma.player.findMany({ select: POOL_SELECT });
-  return rows
-    .map((p) => ({
-      id: p.id,
-      name: `${p.firstName} ${p.lastName}`,
-      position: p.position,
-      bucket: fantasyBucket(p.position),
-      teamShort: p.team?.shortName ?? null,
-      projFantasyPoints: p.projection?.projFantasyPoints ?? 0,
-    }))
-    .sort((a, b) => b.projFantasyPoints - a.projFantasyPoints);
+function rowToPool(p: any): PoolPlayer {
+  return {
+    id: p.id,
+    name: `${p.firstName} ${p.lastName}`,
+    position: p.position,
+    bucket: fantasyBucket(p.position),
+    teamShort: p.team?.shortName ?? null,
+    projFantasyPoints: p.projection?.projFantasyPoints ?? 0,
+  };
 }
 
-// Resolve the SimPlayerInput[] for a set of player ids (order preserved).
-async function simInputs(ids: string[]): Promise<SimPlayerInput[]> {
-  const rows = await prisma.player.findMany({
-    where: { id: { in: ids } },
-    select: POOL_SELECT,
+// The players a DraftParticipant drafted, as a lineup-selectable roster.
+async function rosterOf(participantId: string): Promise<PoolPlayer[]> {
+  const picks = await prisma.draftPick.findMany({
+    where: { participantId },
+    select: { player: { select: POOL_SELECT } },
   });
+  return picks.map((p) => rowToPool(p.player)).sort((a, b) => b.projFantasyPoints - a.projFantasyPoints);
+}
+
+function bucketCounts(players: { bucket: FantasyBucket }[]): Record<FantasyBucket, number> {
+  const c: Record<FantasyBucket, number> = { G: 0, F: 0, C: 0 };
+  for (const p of players) c[p.bucket]++;
+  return c;
+}
+
+// A roster can field a legal lineup only if it has enough at each position.
+function rosterIsPlayable(players: PoolPlayer[]): boolean {
+  if (players.length < MIN_TEAM_TOTAL) return false;
+  const c = bucketCounts(players);
+  return c.G >= STARTER_QUOTA.G && c.F >= STARTER_QUOTA.F && c.C >= STARTER_QUOTA.C;
+}
+
+export interface ChallengeableRoom {
+  roomId: string;
+  roomName: string;
+  myParticipantId: string;
+  myTeamName: string;
+  opponents: { participantId: string; teamName: string; userId: string; userName: string }[];
+}
+
+// Rooms where the caller has a playable drafted team AND at least one other
+// real user has a playable team to be challenged.
+export async function listChallengeableRooms(userId: string): Promise<ChallengeableRoom[]> {
+  const rooms = await prisma.draftRoom.findMany({
+    where: { participants: { some: { userId } } },
+    select: {
+      id: true,
+      name: true,
+      participants: {
+        select: {
+          id: true,
+          teamName: true,
+          userId: true,
+          user: { select: { name: true, email: true } },
+          _count: { select: { picks: true } },
+        },
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  const out: ChallengeableRoom[] = [];
+  for (const room of rooms) {
+    const mine = room.participants.find((p) => p.userId === userId);
+    if (!mine) continue;
+    const myRoster = await rosterOf(mine.id);
+    if (!rosterIsPlayable(myRoster)) continue;
+
+    const opponents: ChallengeableRoom["opponents"] = [];
+    for (const p of room.participants) {
+      if (!p.userId || p.userId === userId) continue;
+      if (p._count.picks < MIN_TEAM_TOTAL) continue;
+      const roster = await rosterOf(p.id);
+      if (!rosterIsPlayable(roster)) continue;
+      opponents.push({
+        participantId: p.id,
+        teamName: p.teamName,
+        userId: p.userId,
+        userName: p.user?.name || p.user?.email || "Παίκτης",
+      });
+    }
+    if (opponents.length === 0) continue;
+    out.push({
+      roomId: room.id,
+      roomName: room.name,
+      myParticipantId: mine.id,
+      myTeamName: mine.teamName,
+      opponents,
+    });
+  }
+  return out;
+}
+
+// Resolve SimPlayerInput[] for a set of player ids (order preserved).
+async function simInputs(ids: string[]): Promise<SimPlayerInput[]> {
+  const rows = await prisma.player.findMany({ where: { id: { in: ids } }, select: POOL_SELECT });
   const byId = new Map(rows.map((r) => [r.id, r]));
   return ids
     .map((id) => byId.get(id))
@@ -74,31 +155,49 @@ async function simInputs(ids: string[]): Promise<SimPlayerInput[]> {
     }));
 }
 
-// bucketOf lookup for lineup validation, backed by the DB.
-async function bucketResolver(ids: string[]): Promise<(id: string) => FantasyBucket | null> {
-  const rows = await prisma.player.findMany({
-    where: { id: { in: ids } },
-    select: { id: true, position: true },
+// Create a room-scoped challenge (status "pending") and notify the opponent.
+export async function createChallenge(
+  challengerId: string,
+  opts: { roomId: string; opponentParticipantId: string; mode: string }
+) {
+  const safeMode = opts.mode === "fantasy" ? "fantasy" : "score";
+  const room = await prisma.draftRoom.findUnique({
+    where: { id: opts.roomId },
+    select: { id: true, name: true, participants: { select: { id: true, teamName: true, userId: true } } },
   });
-  const map = new Map(rows.map((r) => [r.id, fantasyBucket(r.position)]));
-  return (id: string) => map.get(id) ?? null;
-}
+  if (!room) throw new Error("Άγνωστο draft room.");
 
-// Create a challenge (status "pending") and notify the opponent.
-export async function createChallenge(challengerId: string, opponentId: string, mode: string) {
-  if (challengerId === opponentId) throw new Error("Δεν μπορείς να προκαλέσεις τον εαυτό σου.");
-  const safeMode = mode === "fantasy" ? "fantasy" : "score";
-  const opp = await prisma.user.findUnique({ where: { id: opponentId }, select: { id: true } });
-  if (!opp) throw new Error("Άγνωστος αντίπαλος.");
+  const mine = room.participants.find((p) => p.userId === challengerId);
+  if (!mine) throw new Error("Δεν έχεις ομάδα σε αυτό το room.");
+  const opp = room.participants.find((p) => p.id === opts.opponentParticipantId);
+  if (!opp || !opp.userId) throw new Error("Άγνωστος αντίπαλος.");
+  if (opp.userId === challengerId) throw new Error("Δεν μπορείς να προκαλέσεις τον εαυτό σου.");
+
+  const [myRoster, oppRoster] = await Promise.all([rosterOf(mine.id), rosterOf(opp.id)]);
+  if (!rosterIsPlayable(myRoster)) throw new Error("Η ομάδα σου δεν έχει αρκετούς παίκτες (χρειάζεται 2G/2F/1C + πάγκο).");
+  if (!rosterIsPlayable(oppRoster)) throw new Error("Η ομάδα του αντιπάλου δεν έχει αρκετούς παίκτες.");
 
   const match = await prisma.friendlyMatch.create({
-    data: { challengerId, opponentId, mode: safeMode, status: "pending" },
+    data: {
+      challengerId,
+      opponentId: opp.userId,
+      mode: safeMode,
+      status: "pending",
+      roomId: room.id,
+      roomName: room.name,
+      challengerParticipantId: mine.id,
+      opponentParticipantId: opp.id,
+      challengerTeamName: mine.teamName,
+      opponentTeamName: opp.teamName,
+    },
     include: { challenger: { select: { name: true } } },
   });
 
-  await sendPushToUser(opponentId, {
+  await sendPushToUser(opp.userId, {
     title: "🏀 Πρόκληση σε φιλικό!",
-    body: `${match.challenger?.name ?? "Κάποιος"} σε προκαλεί σε ${safeMode === "fantasy" ? "μάχη fantasy πόντων" : "φιλικό αγώνα"}.`,
+    body: `${match.challenger?.name ?? "Κάποιος"} (${mine.teamName}) σε προκαλεί σε ${
+      safeMode === "fantasy" ? "μάχη fantasy πόντων" : "φιλικό αγώνα"
+    }.`,
     url: `/friendly/${match.id}`,
     tag: `friendly-${match.id}`,
   }).catch(() => {});
@@ -111,11 +210,11 @@ interface MatchView {
   mode: string;
   status: string;
   role: "challenger" | "opponent";
-  me: { id: string; name: string; ready: boolean; lineup: LineupJSON | null };
-  them: { id: string; name: string; ready: boolean; hasLineup: boolean };
+  roomName: string | null;
+  me: { id: string; name: string; teamName: string | null; ready: boolean; lineup: LineupJSON | null; roster: PoolPlayer[] };
+  them: { id: string; name: string; teamName: string | null; ready: boolean; hasLineup: boolean };
   startedAt: string | null;
   durationMs: number;
-  // Revealed only once the game is live/complete:
   timeline: MatchTimeline | null;
   sides: { challengerId: string; opponentId: string } | null;
   result: {
@@ -137,8 +236,8 @@ const parseLineup = (s: string | null): LineupJSON | null => {
   }
 };
 
-// Load a match from the perspective of `userId`. Lazily flips a finished
-// playback to "complete". Returns null if the user isn't a participant.
+// Load a match from `userId`'s perspective. Lazily flips finished playback to
+// "complete". Returns null if the user isn't a participant.
 export async function loadMatchView(matchId: string, userId: string): Promise<MatchView | null> {
   let m = await prisma.friendlyMatch.findUnique({
     where: { id: matchId },
@@ -150,7 +249,6 @@ export async function loadMatchView(matchId: string, userId: string): Promise<Ma
   if (!m) return null;
   if (m.challengerId !== userId && m.opponentId !== userId) return null;
 
-  // Lazily complete a match whose playback window has elapsed.
   if (m.status === "live" && m.startedAt && Date.now() - m.startedAt.getTime() >= MATCH_DURATION_MS + 1500) {
     m = await prisma.friendlyMatch.update({
       where: { id: matchId },
@@ -165,6 +263,11 @@ export async function loadMatchView(matchId: string, userId: string): Promise<Ma
   const role: "challenger" | "opponent" = m.challengerId === userId ? "challenger" : "opponent";
   const isChal = role === "challenger";
 
+  const myParticipantId = isChal ? m.challengerParticipantId : m.opponentParticipantId;
+  // Only load the roster while still building — after tip-off it's not needed.
+  const roster =
+    m.status === "building" && myParticipantId ? await rosterOf(myParticipantId) : [];
+
   const meLineup = parseLineup(isChal ? m.challengerLineup : m.opponentLineup);
   const themLineupRaw = isChal ? m.opponentLineup : m.challengerLineup;
 
@@ -176,15 +279,19 @@ export async function loadMatchView(matchId: string, userId: string): Promise<Ma
     mode: m.mode,
     status: m.status,
     role,
+    roomName: m.roomName,
     me: {
       id: userId,
       name: (isChal ? m.challenger?.name : m.opponent?.name) ?? "Εγώ",
+      teamName: isChal ? m.challengerTeamName : m.opponentTeamName,
       ready: isChal ? m.challengerReady : m.opponentReady,
       lineup: meLineup,
+      roster,
     },
     them: {
       id: isChal ? m.opponentId : m.challengerId,
       name: (isChal ? m.opponent?.name : m.challenger?.name) ?? "Αντίπαλος",
+      teamName: isChal ? m.opponentTeamName : m.challengerTeamName,
       ready: isChal ? m.opponentReady : m.challengerReady,
       hasLineup: !!themLineupRaw,
     },
@@ -224,21 +331,14 @@ export async function listMatches(userId: string) {
       status: m.status,
       role: isChal ? "challenger" : "opponent",
       opponentName: (isChal ? m.opponent?.name : m.challenger?.name) ?? "—",
+      opponentTeam: (isChal ? m.opponentTeamName : m.challengerTeamName) ?? null,
+      myTeam: (isChal ? m.challengerTeamName : m.opponentTeamName) ?? null,
+      roomName: m.roomName,
       winnerId: m.winnerId,
       iWon: m.status === "complete" && m.winnerId != null ? m.winnerId === userId : null,
       updatedAt: m.updatedAt.toISOString(),
     };
   });
-}
-
-// Users you can challenge (everyone except yourself).
-export async function listOpponents(userId: string) {
-  const rows = await prisma.user.findMany({
-    where: { id: { not: userId } },
-    select: { id: true, name: true, email: true },
-    orderBy: { name: "asc" },
-  });
-  return rows.map((u) => ({ id: u.id, name: u.name || u.email || "Παίκτης" }));
 }
 
 // Handle an action on a match. Returns the fresh view for the caller.
@@ -260,7 +360,7 @@ export async function actOnMatch(
       await prisma.friendlyMatch.update({ where: { id: matchId }, data: { status: "building" } });
       await sendPushToUser(m.challengerId, {
         title: "✅ Η πρόκληση έγινε δεκτή!",
-        body: "Φτιάξε τη σύνθεσή σου για το φιλικό.",
+        body: "Στήσε τη σύνθεσή σου για το φιλικό.",
         url: `/friendly/${matchId}`,
         tag: `friendly-${matchId}`,
       }).catch(() => {});
@@ -287,8 +387,12 @@ export async function actOnMatch(
       if (m.status !== "building") throw new Error("Δεν μπορείς να αλλάξεις σύνθεση τώρα.");
       const lineup = payload?.lineup;
       if (!lineup) throw new Error("Λείπει η σύνθεση.");
-      const bucketOf = await bucketResolver([...(lineup.starters || []), ...(lineup.bench || [])]);
-      const v = validateLineup(lineup, bucketOf);
+      const participantId = isChal ? m.challengerParticipantId : m.opponentParticipantId;
+      if (!participantId) throw new Error("Δεν βρέθηκε η ομάδα σου.");
+      const roster = await rosterOf(participantId);
+      const bucketOf = (id: string) => roster.find((p) => p.id === id)?.bucket ?? null;
+      const allowed = new Set(roster.map((p) => p.id));
+      const v = validateLineup(lineup, bucketOf, allowed);
       if (!v.ok) throw new Error(v.error);
       await prisma.friendlyMatch.update({
         where: { id: matchId },
@@ -306,7 +410,6 @@ export async function actOnMatch(
         where: { id: matchId },
         data: isChal ? { challengerReady: true } : { opponentReady: true },
       });
-      // Both ready → generate the timeline and tip off.
       if (updated.challengerReady && updated.opponentReady && updated.status === "building") {
         await generateAndStart(matchId);
       }
@@ -327,18 +430,13 @@ async function generateAndStart(matchId: string) {
   const opp = parseLineup(m.opponentLineup);
   if (!chal || !opp) return;
 
-  const chalIds = [...chal.starters, ...chal.bench];
-  const oppIds = [...opp.starters, ...opp.bench];
-  const [chalInputs, oppInputs] = await Promise.all([simInputs(chalIds), simInputs(oppIds)]);
+  const [chalInputs, oppInputs] = await Promise.all([
+    simInputs([...chal.starters, ...chal.bench]),
+    simInputs([...opp.starters, ...opp.bench]),
+  ]);
 
-  const timeline = simulateMatch(
-    chalInputs,
-    oppInputs,
-    new Set(chal.starters),
-    new Set(opp.starters)
-  );
+  const timeline = simulateMatch(chalInputs, oppInputs, new Set(chal.starters), new Set(opp.starters));
 
-  // Winner depends on the chosen mode.
   let winnerId: string | null;
   if (m.mode === "fantasy") {
     winnerId =

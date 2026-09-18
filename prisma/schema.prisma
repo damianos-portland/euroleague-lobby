@@ -144,6 +144,14 @@ model FriendlyMatch {
   mode          String   @default("score")
   // status: pending | building | live | complete | declined | cancelled
   status        String   @default("pending")
+  // The friendly is scoped to one draft room; each side plays their drafted
+  // roster (their DraftParticipant's picks in that room).
+  roomId                  String?
+  roomName                String?
+  challengerParticipantId String?
+  opponentParticipantId   String?
+  challengerTeamName      String?
+  opponentTeamName        String?
   challengerLineup String? // JSON { starters: [playerId x5], bench: [playerId x5] }
   opponentLineup   String?
   challengerReady  Boolean @default(false)

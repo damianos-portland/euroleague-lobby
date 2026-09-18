@@ -56,8 +56,9 @@ interface MatchView {
   mode: string;
   status: string;
   role: "challenger" | "opponent";
-  me: { id: string; name: string; ready: boolean; lineup: LineupJSON | null };
-  them: { id: string; name: string; ready: boolean; hasLineup: boolean };
+  roomName: string | null;
+  me: { id: string; name: string; teamName: string | null; ready: boolean; lineup: LineupJSON | null; roster: PoolPlayer[] };
+  them: { id: string; name: string; teamName: string | null; ready: boolean; hasLineup: boolean };
   startedAt: string | null;
   durationMs: number;
   timeline: MatchTimeline | null;
@@ -205,7 +206,8 @@ function PendingView({ view, reload }: { view: MatchView; reload: () => void }) 
 
 // --------------------------------------------------------------- BUILDING ----
 function BuildingView({ view, reload }: { view: MatchView; reload: () => void }) {
-  const [pool, setPool] = useState<PoolPlayer[]>([]);
+  // The pool is now the user's OWN drafted roster (from the match view).
+  const pool = view.me.roster;
   const [starters, setStarters] = useState<string[]>(view.me.lineup?.starters ?? []);
   const [bench, setBench] = useState<string[]>(view.me.lineup?.bench ?? []);
   const [tab, setTab] = useState<Bucket>("G");
@@ -214,13 +216,6 @@ function BuildingView({ view, reload }: { view: MatchView; reload: () => void })
   const [saving, setSaving] = useState(false);
   const [savedLineup, setSavedLineup] = useState(!!view.me.lineup);
   const locked = view.me.ready;
-
-  useEffect(() => {
-    fetch("/api/friendly/pool", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => setPool(d.pool ?? []))
-      .catch(() => {});
-  }, []);
 
   const byId = useMemo(() => new Map(pool.map((p) => [p.id, p])), [pool]);
   const chosen = useMemo(() => new Set([...starters, ...bench]), [starters, bench]);
@@ -232,6 +227,12 @@ function BuildingView({ view, reload }: { view: MatchView; reload: () => void })
     }
     return c;
   }, [starters, byId]);
+
+  const rosterCounts = useMemo(() => {
+    const c: Record<Bucket, number> = { G: 0, F: 0, C: 0 };
+    for (const p of pool) c[p.bucket]++;
+    return c;
+  }, [pool]);
 
   const valid =
     starters.length === 5 &&
@@ -310,20 +311,25 @@ function BuildingView({ view, reload }: { view: MatchView; reload: () => void })
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-white">Στήσε τη σύνθεσή σου</h2>
+          <h2 className="text-lg font-bold text-white">
+            Στήσε τη σύνθεση — {view.me.teamName ?? "Η ομάδα σου"}
+          </h2>
           <p className="text-sm text-slate-400">
-            2 Guards · 2 Forwards · 1 Center + 5 στον πάγκο · vs {view.them.name}
+            2 Guards · 2 Forwards · 1 Center + 5 πάγκο · από το roster σου
+            {view.roomName ? ` (${view.roomName})` : ""} · vs {view.them.teamName ?? view.them.name}
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <Users size={14} />
-          {view.them.name}: {view.them.ready ? <span className="text-emerald-400">έτοιμος ✓</span> : view.them.hasLineup ? "έφτιαξε σύνθεση" : "στήνει…"}
+          {view.them.teamName ?? view.them.name}:{" "}
+          {view.them.ready ? <span className="text-emerald-400">έτοιμος ✓</span> : view.them.hasLineup ? "έφτιαξε σύνθεση" : "στήνει…"}
         </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_minmax(0,360px)]">
-        {/* Player pool */}
+        {/* Your drafted roster */}
         <div className="card card-pad">
+          <div className="section-title mb-2">Το roster σου ({pool.length} παίκτες)</div>
           <div className="mb-3 flex items-center gap-2">
             {(["G", "F", "C"] as Bucket[]).map((b) => (
               <button
@@ -333,7 +339,7 @@ function BuildingView({ view, reload }: { view: MatchView; reload: () => void })
                   tab === b ? "bg-brand-500/15 text-white ring-brand-500/30" : "bg-white/5 text-slate-400 ring-white/10"
                 }`}
               >
-                {BUCKET_LABEL[b]} · {starterCounts[b]}/{STARTER_QUOTA[b]}
+                {BUCKET_LABEL[b]} · {rosterCounts[b]}
               </button>
             ))}
             <input
@@ -344,7 +350,7 @@ function BuildingView({ view, reload }: { view: MatchView; reload: () => void })
             />
           </div>
           <div className="max-h-[460px] overflow-y-auto pr-1">
-            {pool.length === 0 && <div className="py-10 text-center text-slate-500"><Loader2 className="mx-auto animate-spin" /></div>}
+            {pool.length === 0 && <div className="py-10 text-center text-sm text-slate-500">Δεν βρέθηκε roster.</div>}
             {filtered.map((p) => {
               const picked = chosen.has(p.id);
               return (
@@ -512,8 +518,10 @@ function GameView({ view, reload }: { view: MatchView; reload: () => void }) {
   const clock = finished ? "ΤΕΛΙΚΟ" : last?.clock ?? "Q1 10:00";
 
   const isChal = view.role === "challenger";
-  const homeName = isChal ? view.me.name : view.them.name;
-  const awayName = isChal ? view.them.name : view.me.name;
+  const meName = view.me.teamName ?? view.me.name;
+  const themName = view.them.teamName ?? view.them.name;
+  const homeName = isChal ? meName : themName;
+  const awayName = isChal ? themName : meName;
   const homeIsMe = isChal;
 
   const progress = Math.min(100, (elapsed / duration) * 100);

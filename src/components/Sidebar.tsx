@@ -24,6 +24,7 @@ import {
   Settings,
   Flame,
   Swords,
+  Stethoscope,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
@@ -59,6 +60,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     items: [
       { href: "/teams", label: "Teams", icon: Shield },
       { href: "/players", label: "Players", icon: Users },
+      { href: "/injuries", label: "Απουσίες", icon: Stethoscope },
     ],
   },
   {

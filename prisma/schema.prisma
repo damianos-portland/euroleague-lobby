@@ -172,6 +172,27 @@ model FriendlyMatch {
   @@index([status])
 }
 
+// Per-round injury / absence note. Populated offline ("from here") — no live
+// scraping in the app. Each row = one player's availability for a given round.
+model InjuryNote {
+  id         String   @id @default(cuid())
+  playerName String
+  position   String?  // G | F | C
+  teamCode   String   // fantaking abbrev (OLY, PAO, RMB…)
+  teamName   String
+  round      Int
+  opponent   String?  // opponent code that round
+  home       Boolean  @default(true)
+  // status: "out" | "doubtful" | "questionable" | "probable"
+  status     String
+  note       String   @default("") // English description (translated here)
+  source     String   @default("EuroLeague Fantasy")
+  updatedAt  DateTime @updatedAt
+
+  @@index([round])
+  @@index([teamCode])
+}
+
 model Player {
   id        String  @id @default(cuid())
   // Stable EuroLeague person code — robust match key across seasons/feeds

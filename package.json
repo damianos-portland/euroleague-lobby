@@ -17,7 +17,8 @@
     "db:recompute": "tsx scripts/recompute.ts",
     "db:import-credits": "tsx scripts/import-credits.ts",
     "db:seed-preseason": "tsx scripts/seed-preseason.ts",
-    "setup": "prisma generate && prisma db push && tsx prisma/seed.ts"
+    "setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
+    "db:seed-injuries": "tsx scripts/seed-injuries.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

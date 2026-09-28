@@ -16,12 +16,11 @@ export default async function InjuriesPage() {
   const latest = await prisma.injuryNote.aggregate({ _max: { round: true } });
   const round = latest._max.round ?? 0;
 
+  // round is 0 only when no notes exist yet; the round:0 queries then return [].
   const [teams, notes, fixtures] = await Promise.all([
     prisma.team.findMany({ select: { shortName: true, name: true } }),
-    round ? prisma.injuryNote.findMany({ where: { round } }) : Promise.resolve([]),
-    round
-      ? prisma.fixture.findMany({ where: { season: FIXTURE_SEASON, round }, select: { homeCode: true, awayCode: true } })
-      : Promise.resolve([]),
+    prisma.injuryNote.findMany({ where: { round } }),
+    prisma.fixture.findMany({ where: { season: FIXTURE_SEASON, round }, select: { homeCode: true, awayCode: true } }),
   ]);
 
   // fixture per team code -> { opp, home }
@@ -92,7 +91,7 @@ export default async function InjuriesPage() {
                   </div>
                   {clean ? (
                     <div className="flex items-center gap-2 rounded-lg bg-emerald-500/[0.06] px-3 py-2.5 text-xs text-emerald-300">
-                      <CheckCircle2 size={14} /> Καμία γνωστή απουσία — πλήρες ρόστερ.
+                      <CheckCircle2 size={14} /> Καμία αναφερόμενη απουσία (βάσει πηγών).
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">

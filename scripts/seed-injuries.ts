@@ -11,6 +11,13 @@ import { prisma } from "../src/lib/db";
 const ROUND = 2;
 type Row = { team: string; teamName: string; player: string; pos: string; status: "out" | "doubtful" | "questionable"; note: string };
 
+// Canonical Team.shortName codes (must match the DB / Fixture codes). Guards
+// against the code-mismatch class of bug (notes orphaned from team cards).
+const VALID_CODES = new Set([
+  "ASV", "BAR", "BAS", "BES", "DUB", "HTA", "IST", "MAD", "MIL", "MUN",
+  "OLY", "PAM", "PAN", "PAR", "PRS", "RED", "TEL", "ULK", "VIR", "ZAL",
+]);
+
 // team = our Team.shortName (matches Fixture codes). Sources merged 2026-09-28.
 const CURATED: Row[] = [
   // Panathinaikos — 4 confirmed out (Eurohoops R1 injury report)
@@ -84,6 +91,13 @@ const CURATED: Row[] = [
 const SOURCE = "Eurohoops injury report + EuroLeague/Greek media (curated 2026-09-28)";
 
 async function main() {
+  // --- Validation (fail loudly instead of silently losing/orphaning data) ---
+  if (CURATED.length === 0) throw new Error("CURATED is empty — refusing to wipe the round's notes.");
+  const unknown = [...new Set(CURATED.map((c) => c.team))].filter((t) => !VALID_CODES.has(t));
+  if (unknown.length) throw new Error(`Unknown team codes (must be Team.shortName): ${unknown.join(", ")}`);
+  const badStatus = CURATED.filter((c) => !["out", "doubtful", "questionable"].includes(c.status));
+  if (badStatus.length) throw new Error(`Invalid status on: ${badStatus.map((c) => c.player).join(", ")}`);
+
   const rows = CURATED.map((c) => ({
     playerName: c.player,
     position: c.pos,
@@ -96,11 +110,16 @@ async function main() {
     note: c.note,
     source: SOURCE,
   }));
-  await prisma.injuryNote.deleteMany({ where: { round: ROUND } });
-  await prisma.injuryNote.createMany({ data: rows });
+
+  // Atomic replace so a failure never leaves the round half-populated.
+  await prisma.$transaction([
+    prisma.injuryNote.deleteMany({ where: { round: ROUND } }),
+    prisma.injuryNote.createMany({ data: rows }),
+  ]);
+
   const byStatus = rows.reduce((a: Record<string, number>, r) => ((a[r.status] = (a[r.status] || 0) + 1), a), {});
   const teams = [...new Set(rows.map((r) => r.teamCode))];
   console.log(`Seeded ${rows.length} curated injury notes for R${ROUND}:`, JSON.stringify(byStatus));
-  console.log(`Teams with absences: ${teams.length} (${teams.sort().join(", ")})`);
+  console.log(`Teams with absences: ${teams.length}/${VALID_CODES.size} (${teams.sort().join(", ")})`);
 }
 main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());
